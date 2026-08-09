@@ -18,7 +18,7 @@ class PharoClient:
 
     def __init__(self, host: str = "localhost", port: int | None = None):
         if port is None:
-            port = int(os.getenv("PHARO_SIS_PORT", "8086"))
+            port = int(os.getenv("SIS_PORT", "8086"))
         self.base_url = f"http://{host}:{port}"
         self.client = httpx.Client(timeout=30.0)
 

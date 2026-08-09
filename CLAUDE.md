@@ -26,7 +26,7 @@ This project uses `uv` as the Python package manager. Prerequisites:
 
 You can configure the server using environment variables:
 
-- **`PHARO_SIS_PORT`**: Port number for PharoSmalltalkInteropServer (default: 8086)
+- **`SIS_PORT`**: Port number for PharoSmalltalkInteropServer (default: 8086)
 
 ### Common Commands
 
@@ -38,7 +38,7 @@ uv sync --dev
 uv run pharo-smalltalk-interop-mcp-server
 
 # Run the MCP server with custom port
-PHARO_SIS_PORT=8081 uv run pharo-smalltalk-interop-mcp-server
+SIS_PORT=8081 uv run pharo-smalltalk-interop-mcp-server
 
 # Run tests
 uv run pytest
@@ -311,7 +311,7 @@ The server is designed to be configured in Cursor's mcp.json:
         "pharo-smalltalk-interop-mcp-server"
       ],
       "env": {
-        "PHARO_SIS_PORT": "8081"
+        "SIS_PORT": "8081"
       }
     }
   }

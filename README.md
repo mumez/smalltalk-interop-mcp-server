@@ -67,20 +67,20 @@ uv run pharo-smalltalk-interop-mcp-server
 
 You can configure the server using environment variables:
 
-- **`PHARO_SIS_PORT`**: Port number for PharoSmalltalkInteropServer (default: 8086)
+- **`SIS_PORT`**: Port number for PharoSmalltalkInteropServer (default: 8086)
 
 Examples:
 
 **Using uvx:**
 
 ```bash
-PHARO_SIS_PORT=8086 uvx --from git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git pharo-smalltalk-interop-mcp-server
+SIS_PORT=8086 uvx --from git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git pharo-smalltalk-interop-mcp-server
 ```
 
 **Using uv:**
 
 ```bash
-PHARO_SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
+SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
 ```
 
 ### Cursor MCP settings
@@ -98,7 +98,7 @@ PHARO_SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
         "pharo-smalltalk-interop-mcp-server"
       ],
       "env": {
-        "PHARO_SIS_PORT": "8086"
+        "SIS_PORT": "8086"
       }
     }
   }
@@ -119,7 +119,7 @@ PHARO_SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
         "pharo-smalltalk-interop-mcp-server"
       ],
       "env": {
-        "PHARO_SIS_PORT": "8086"
+        "SIS_PORT": "8086"
       }
     }
   }

@@ -41,4 +41,4 @@ jobs:
       run: |
         timeout 10s uv run pharo-smalltalk-interop-mcp-server || test $? = 124
       env:
-        PHARO_SIS_PORT: 8087
+        SIS_PORT: 8087
