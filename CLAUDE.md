@@ -35,10 +35,10 @@ You can configure the server using environment variables:
 uv sync --dev
 
 # Run the MCP server
-uv run pharo-smalltalk-interop-mcp-server
+uv run smalltalk-interop-mcp-server
 
 # Run the MCP server with custom port
-SIS_PORT=8081 uv run pharo-smalltalk-interop-mcp-server
+SIS_PORT=8081 uv run smalltalk-interop-mcp-server
 
 # Run tests
 uv run pytest
@@ -302,13 +302,13 @@ The server is designed to be configured in Cursor's mcp.json:
 ```json
 {
   "mcpServers": {
-    "pharo-smalltalk-interop-mcp-server": {
+    "smalltalk-interop-mcp-server": {
       "command": "uv",
       "args": [
         "--directory",
-        "/path/to/pharo-smalltalk-interop-mcp-server",
+        "/path/to/smalltalk-interop-mcp-server",
         "run",
-        "pharo-smalltalk-interop-mcp-server"
+        "smalltalk-interop-mcp-server"
       ],
       "env": {
         "SIS_PORT": "8081"

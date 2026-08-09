@@ -591,7 +591,7 @@ class TestPharoClient:
             "result": {
                 "structure": {"totalMorphs": 3, "morphs": []},
                 "summary": "World with 3 top-level morphs",
-                "screenshot": "/tmp/pharo-ui.png",
+                "screenshot": "/tmp/ui.png",
                 "target_type": "world",
             },
         }
@@ -655,7 +655,7 @@ class TestPharoClient:
                     ],
                 },
                 "summary": "World with 5 top-level morphs",
-                "screenshot": "/tmp/pharo-ui-world.png",
+                "screenshot": "/tmp/ui-world.png",
                 "target_type": "world",
             },
         }
@@ -1218,7 +1218,7 @@ class TestInteropFunctions:
             "result": {
                 "structure": {"totalMorphs": 2, "morphs": []},
                 "summary": "World UI",
-                "screenshot": "/tmp/pharo-ui.png",
+                "screenshot": "/tmp/ui.png",
                 "target_type": "world",
             },
         }

@@ -1,6 +1,6 @@
-# pharo-smalltalk-interop-mcp-server
+# smalltalk-interop-mcp-server
 
-[![CI](https://github.com/mumez/pharo-smalltalk-interop-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/mumez/pharo-smalltalk-interop-mcp-server/actions/workflows/ci.yml)
+[![CI](https://github.com/mumez/smalltalk-interop-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/mumez/smalltalk-interop-mcp-server/actions/workflows/ci.yml)
 
 A local MCP server to communicate local Pharo Smalltalk image.
 It supports:
@@ -27,7 +27,7 @@ It supports:
 The easiest way to run the server without cloning the repository:
 
 ```bash
-uvx --from git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git pharo-smalltalk-interop-mcp-server
+uvx --from git+https://github.com/mumez/smalltalk-interop-mcp-server.git smalltalk-interop-mcp-server
 ```
 
 ### Development Installation
@@ -37,13 +37,13 @@ To set up for development:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git
+git clone https://github.com/mumez/smalltalk-interop-mcp-server.git
 ```
 
 2. Install dependencies using uv:
 
 ```bash
-cd pharo-smalltalk-interop-mcp-server
+cd smalltalk-interop-mcp-server
 uv sync --dev
 ```
 
@@ -54,13 +54,13 @@ uv sync --dev
 **Using uvx (no installation required):**
 
 ```bash
-uvx --from git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git pharo-smalltalk-interop-mcp-server
+uvx --from git+https://github.com/mumez/smalltalk-interop-mcp-server.git smalltalk-interop-mcp-server
 ```
 
 **Using uv (after cloning the repository):**
 
 ```bash
-uv run pharo-smalltalk-interop-mcp-server
+uv run smalltalk-interop-mcp-server
 ```
 
 #### Environment Variables
@@ -74,13 +74,13 @@ Examples:
 **Using uvx:**
 
 ```bash
-SIS_PORT=8086 uvx --from git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git pharo-smalltalk-interop-mcp-server
+SIS_PORT=8086 uvx --from git+https://github.com/mumez/smalltalk-interop-mcp-server.git smalltalk-interop-mcp-server
 ```
 
 **Using uv:**
 
 ```bash
-SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
+SIS_PORT=9999 uv run smalltalk-interop-mcp-server
 ```
 
 ### Cursor MCP settings
@@ -94,8 +94,8 @@ SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git",
-        "pharo-smalltalk-interop-mcp-server"
+        "git+https://github.com/mumez/smalltalk-interop-mcp-server.git",
+        "smalltalk-interop-mcp-server"
       ],
       "env": {
         "SIS_PORT": "8086"
@@ -114,9 +114,9 @@ SIS_PORT=9999 uv run pharo-smalltalk-interop-mcp-server
       "command": "uv",
       "args": [
         "--directory",
-        "/your-path/to/pharo-smalltalk-interop-mcp-server",
+        "/your-path/to/smalltalk-interop-mcp-server",
         "run",
-        "pharo-smalltalk-interop-mcp-server"
+        "smalltalk-interop-mcp-server"
       ],
       "env": {
         "SIS_PORT": "8086"
@@ -133,13 +133,13 @@ Note: The `env` section is optional and can be used to set environment variables
 **Using uvx (recommended):**
 
 ```bash
-claude mcp add -s user smalltalk-interop -- uvx --from git+https://github.com/mumez/pharo-smalltalk-interop-mcp-server.git pharo-smalltalk-interop-mcp-server
+claude mcp add -s user smalltalk-interop -- uvx --from git+https://github.com/mumez/smalltalk-interop-mcp-server.git smalltalk-interop-mcp-server
 ```
 
 **Using uv (after cloning):**
 
 ```bash
-claude mcp add -s user smalltalk-interop -- uv --directory /path/to/pharo-smalltalk-interop-mcp-server run pharo-smalltalk-interop-mcp-server
+claude mcp add -s user smalltalk-interop -- uv --directory /path/to/smalltalk-interop-mcp-server run smalltalk-interop-mcp-server
 ```
 
 ### MCP Tools Available
@@ -408,7 +408,7 @@ uv run pre-commit run --all-files
 ### Project Structure
 
 ```
-pharo-smalltalk-interop-mcp-server/
+smalltalk-interop-mcp-server/
 ├── pharo_smalltalk_interop_mcp_server/
 │   ├── __init__.py
 │   ├── core.py          # HTTP client and core functions

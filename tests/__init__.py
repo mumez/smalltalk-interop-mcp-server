@@ -1,1 +1,1 @@
-"""Test package for pharo-smalltalk-interop-mcp-server."""
+"""Test package for smalltalk-interop-mcp-server."""

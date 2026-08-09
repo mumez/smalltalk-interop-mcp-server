@@ -30,7 +30,7 @@ from .core import (
     interop_search_traits_like,
 )
 
-mcp = FastMCP("pharo-smalltalk-interop-mcp-server")
+mcp = FastMCP("smalltalk-interop-mcp-server")
 
 
 @mcp.tool(

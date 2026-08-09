@@ -10,7 +10,7 @@ class TestMCPServerInit:
         """Test that MCP server can be created."""
         from pharo_smalltalk_interop_mcp_server.server import mcp
 
-        assert mcp.name == "pharo-smalltalk-interop-mcp-server"
+        assert mcp.name == "smalltalk-interop-mcp-server"
         # Check that the server instance exists
         assert mcp is not None
 
