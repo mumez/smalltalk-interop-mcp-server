@@ -1,0 +1,1 @@
+"""Smalltalk Interop MCP Server."""

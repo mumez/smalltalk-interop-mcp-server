@@ -1,8 +1,8 @@
-"""Integration tests for Pharo Smalltalk Interop MCP Server.
+"""Integration tests for Smalltalk Interop MCP Server.
 
-These tests communicate with a live PharoSmalltalkInteropServer instance
-running on port 8086. They are designed to be version-agnostic and test
-the actual functionality of the MCP server.
+These tests communicate with a live Smalltalk Interop Server instance
+(Pharo or Squeak) running on port 8086. They are designed to be
+version-agnostic and test the actual functionality of the MCP server.
 """
 
 import glob
@@ -10,24 +10,26 @@ import tempfile
 
 import pytest
 
-from pharo_smalltalk_interop_mcp_server.core import PharoClient
+from smalltalk_interop_mcp_server.core import SmalltalkInteropClient
 
 
-class TestPharoIntegration:
-    """Integration tests that communicate with live Pharo server."""
+class TestSmalltalkIntegration:
+    """Integration tests that communicate with a live Smalltalk Interop Server."""
 
     @pytest.fixture(autouse=True)
     def setup_client(self):
-        """Setup PharoClient for integration tests."""
-        self.client = PharoClient()
+        """Setup SmalltalkInteropClient for integration tests."""
+        self.client = SmalltalkInteropClient()
 
         # Test server connectivity first
         try:
             response = self.client.evaluate("1 + 1")
             if not response.get("success", False):
-                pytest.skip("Pharo server not available or not responding correctly")
+                pytest.skip(
+                    "Smalltalk Interop Server not available or not responding correctly"
+                )
         except Exception as e:
-            pytest.skip(f"Cannot connect to Pharo server: {e}")
+            pytest.skip(f"Cannot connect to Smalltalk Interop Server: {e}")
 
         yield
 
@@ -613,7 +615,7 @@ class TestPharoIntegration:
         settings = response["result"]
         # Settings should be a dictionary
         assert isinstance(settings, dict)
-        # Should contain stackSize setting (default in PharoSmalltalkInteropServer)
+        # Should contain stackSize setting (default in the Smalltalk Interop Server)
         assert "stackSize" in settings
         assert isinstance(settings["stackSize"], int)
 

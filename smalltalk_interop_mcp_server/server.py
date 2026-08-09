@@ -1,4 +1,4 @@
-"""FastMCP server for Pharo Smalltalk evaluation."""
+"""FastMCP server for Smalltalk evaluation."""
 
 from typing import Annotated, Any
 
@@ -46,7 +46,7 @@ def eval_code(
     code: Annotated[str, Field(description="The Smalltalk code to evaluate")],
 ) -> dict[str, Any]:
     """
-    Evaluate a Pharo Smalltalk expression with PharoSmalltalkInteropServer.
+    Evaluate a Smalltalk expression via the Smalltalk Interop Server.
 
     Args:
         code: The Smalltalk code to evaluate
@@ -581,7 +581,7 @@ def read_screen(
     target_type: Annotated[
         str,
         Field(
-            description="UI type to inspect: 'world' (morphs), 'spec' (windows), or 'roassal' (visualizations)"
+            description="UI type to inspect: 'world' (morphs), 'spec' (windows, Pharo only), or 'roassal' (visualizations, Pharo only)"
         ),
     ] = "world",
     capture_screenshot: Annotated[
@@ -589,12 +589,13 @@ def read_screen(
     ] = True,
 ) -> dict[str, Any]:
     """
-    Comprehensive UI screen reader for debugging Pharo interfaces.
+    Comprehensive UI screen reader for debugging Smalltalk interfaces.
 
-    Captures screenshot and extracts complete UI structure for World morphs, Spec presenters, and Roassal visualizations.
+    Captures screenshot and extracts complete UI structure for World morphs (Pharo and Squeak),
+    and Spec presenters and Roassal visualizations (Pharo only).
 
     Args:
-        target_type: 'world' for morphs, 'spec' for Spec windows, 'roassal' for visualizations
+        target_type: 'world' for morphs, 'spec' for Spec windows (Pharo only), 'roassal' for visualizations (Pharo only)
         capture_screenshot: Include PNG screenshot in response (default: true)
 
     Returns:
