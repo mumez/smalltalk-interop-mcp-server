@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/mumez/smalltalk-interop-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/mumez/smalltalk-interop-mcp-server/actions/workflows/ci.yml)
 
-A local MCP server to communicate local Pharo Smalltalk image.
+A local MCP server to communicate with a local Smalltalk image (Pharo or Squeak).
 It supports:
 
 - Code Evaluation: Execute Smalltalk expressions and return results
@@ -11,14 +11,16 @@ It supports:
 - Package Management: Export and import packages in Tonel format
 - Project Installation: Install projects using Metacello
 - Test Execution: Run test suites at package or class level
-- UI Debugging: Capture screenshots and inspect UI structure for World morphs, Spec presenters, and Roassal visualizations
+- UI Debugging: Capture screenshots and inspect UI structure for World morphs, and (Pharo only) Spec presenters and Roassal visualizations
 - Server Configuration: Retrieve and modify server settings dynamically
 
 ## Prerequisites
 
 - Python 3.10 or later
 - [uv](https://docs.astral.sh/uv/) package manager
-- Pharo with [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer) installed
+- A Smalltalk Interop Server installed in the target image:
+  - [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer) for Pharo
+  - [SqueakSmalltalkInteropServer](https://github.com/mumez/SqueakSmalltalkInteropServer) for Squeak
 
 ## Installation
 
@@ -67,7 +69,7 @@ uv run smalltalk-interop-mcp-server
 
 You can configure the server using environment variables:
 
-- **`SIS_PORT`**: Port number for PharoSmalltalkInteropServer (default: 8086)
+- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086)
 
 Examples:
 
@@ -144,7 +146,7 @@ claude mcp add -s user smalltalk-interop -- uv --directory /path/to/smalltalk-in
 
 ### MCP Tools Available
 
-This server provides 22 MCP tools that map to all [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer/blob/main/spec/openapi.json) APIs:
+This server provides 22 MCP tools that map to the Smalltalk Interop Server API, shared by both [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer/blob/main/spec/openapi.json) and [SqueakSmalltalkInteropServer](https://github.com/mumez/SqueakSmalltalkInteropServer):
 
 #### Code Evaluation
 
@@ -185,7 +187,7 @@ This server provides 22 MCP tools that map to all [PharoSmalltalkInteropServer](
 
 #### UI Debugging
 
-- **`read_screen`**: UI screen reader for debugging Pharo interfaces with screenshot and structure extraction
+- **`read_screen`**: UI screen reader for debugging Smalltalk interfaces with screenshot and structure extraction
 
 #### Server Configuration
 
@@ -194,11 +196,11 @@ This server provides 22 MCP tools that map to all [PharoSmalltalkInteropServer](
 
 ### read_screen Tool
 
-The `read_screen` tool captures screenshots and extracts UI structure for debugging Pharo UI issues.
+The `read_screen` tool captures screenshots and extracts UI structure for debugging Smalltalk UI issues.
 
 **Parameters:**
 
-- `target_type` (string, default: 'world'): UI type to inspect ('world' for morphs, 'spec' for windows, 'roassal' for visualizations)
+- `target_type` (string, default: 'world'): UI type to inspect ('world' for morphs — Pharo and Squeak, 'spec' for windows — Pharo only, 'roassal' for visualizations — Pharo only)
 - `capture_screenshot` (boolean, default: true): Include PNG screenshot in response
 
 **Returns:** UI structure with screenshot and human-readable summary
@@ -209,10 +211,10 @@ The `read_screen` tool captures screenshots and extracts UI structure for debugg
 # Inspect all morphs in World
 read_screen(target_type='world')
 
-# Inspect Spec presenter windows
+# Inspect Spec presenter windows (Pharo only)
 read_screen(target_type='spec', capture_screenshot=false)
 
-# Inspect Roassal visualizations without screenshot (faster)
+# Inspect Roassal visualizations without screenshot (Pharo only, faster)
 read_screen(target_type='roassal', capture_screenshot=false)
 ```
 
@@ -247,7 +249,7 @@ Example output:
 }
 ```
 
-*Spec (presenters):*
+*Spec (presenters, Pharo only):*
 
 - Window title and class name
 - Geometry (extent, position)
@@ -279,7 +281,7 @@ Example output:
 }
 ```
 
-*Roassal (visualizations):*
+*Roassal (visualizations, Pharo only):*
 
 - Canvas bounds and visibility state
 - Canvas class identification
@@ -379,7 +381,7 @@ apply_settings(settings={"stackSize": 200, "customKey": "customValue"})
 
 ### Running Tests
 
-The project includes comprehensive unit tests with mock-based testing to avoid requiring a live Pharo instance:
+The project includes comprehensive unit tests with mock-based testing to avoid requiring a live Pharo or Squeak instance:
 
 ```bash
 # Run all tests
@@ -409,7 +411,7 @@ uv run pre-commit run --all-files
 
 ```
 smalltalk-interop-mcp-server/
-├── pharo_smalltalk_interop_mcp_server/
+├── smalltalk_interop_mcp_server/
 │   ├── __init__.py
 │   ├── core.py          # HTTP client and core functions
 │   └── server.py        # FastMCP server with tool definitions
@@ -426,15 +428,15 @@ smalltalk-interop-mcp-server/
 
 The test suite uses mock-based testing to ensure:
 
-- **No external dependencies**: Tests run without requiring a live Pharo instance
+- **No external dependencies**: Tests run without requiring a live Pharo or Squeak instance
 - **Comprehensive coverage**: All 22 endpoints and error scenarios are tested
 - **Fast execution**: Tests complete in under 1 second
 - **Reliable results**: Tests are deterministic and don't depend on external state
 
 Test coverage includes:
 
-- HTTP client functionality (`PharoClient` class)
-- All 22 Pharo interop operations
+- HTTP client functionality (`SmalltalkInteropClient` class)
+- All 22 Smalltalk interop operations
 - Error handling (connection errors, HTTP errors, JSON parsing errors)
 - MCP server initialization and tool registration
 - Integration between core functions and MCP tools
