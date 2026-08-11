@@ -5,9 +5,9 @@ from unittest.mock import Mock, patch
 
 import httpx
 
-from pharo_smalltalk_interop_mcp_server.core import (
-    PharoClient,
-    get_pharo_client,
+from smalltalk_interop_mcp_server.core import (
+    SmalltalkInteropClient,
+    get_smalltalk_interop_client,
     interop_apply_settings,
     interop_eval,
     interop_export_package,
@@ -33,39 +33,39 @@ from pharo_smalltalk_interop_mcp_server.core import (
 )
 
 
-class TestPharoClient:
-    """Test PharoClient class."""
+class TestSmalltalkInteropClient:
+    """Test SmalltalkInteropClient class."""
 
     def test_init(self):
-        """Test PharoClient initialization."""
-        client = PharoClient()
+        """Test SmalltalkInteropClient initialization."""
+        client = SmalltalkInteropClient()
         assert client.base_url == "http://localhost:8086"
         assert client.client.timeout.connect == 30.0
 
     def test_init_with_custom_host_port(self):
-        """Test PharoClient initialization with custom host and port."""
-        client = PharoClient(host="example.com", port=9999)
+        """Test SmalltalkInteropClient initialization with custom host and port."""
+        client = SmalltalkInteropClient(host="example.com", port=9999)
         assert client.base_url == "http://example.com:9999"
 
-    @patch.dict("os.environ", {"PHARO_SIS_PORT": "8081"})
+    @patch.dict("os.environ", {"SIS_PORT": "8081"})
     def test_init_with_environment_variable(self):
-        """Test PharoClient initialization with environment variable."""
-        client = PharoClient()
+        """Test SmalltalkInteropClient initialization with environment variable."""
+        client = SmalltalkInteropClient()
         assert client.base_url == "http://localhost:8081"
 
-    @patch.dict("os.environ", {"PHARO_SIS_PORT": "8081"})
+    @patch.dict("os.environ", {"SIS_PORT": "8081"})
     def test_init_explicit_port_overrides_env(self):
         """Test that explicit port parameter overrides environment variable."""
-        client = PharoClient(port=9999)
+        client = SmalltalkInteropClient(port=9999)
         assert client.base_url == "http://localhost:9999"
 
     @patch.dict("os.environ", {}, clear=True)
     def test_init_default_port_when_no_env(self):
         """Test default port is used when no environment variable is set."""
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         assert client.base_url == "http://localhost:8086"
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_get_success(self, mock_client_class):
         """Test successful GET request."""
         mock_client = Mock()
@@ -74,7 +74,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("GET", "/test", {"param": "value"})
 
         assert result == {"success": True, "result": "test"}
@@ -83,7 +83,7 @@ class TestPharoClient:
         )
         mock_response.raise_for_status.assert_called_once()
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_post_success(self, mock_client_class):
         """Test successful POST request."""
         mock_client = Mock()
@@ -92,7 +92,7 @@ class TestPharoClient:
         mock_client.post.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("POST", "/test", {"data": "value"})
 
         assert result == {"success": True, "result": "test"}
@@ -101,14 +101,14 @@ class TestPharoClient:
         )
         mock_response.raise_for_status.assert_called_once()
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_connection_error(self, mock_client_class):
         """Test connection error handling."""
         mock_client = Mock()
         mock_client.get.side_effect = httpx.RequestError("Connection failed")
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("GET", "/test")
 
         assert result == {
@@ -116,7 +116,7 @@ class TestPharoClient:
             "error": "Connection error: Connection failed",
         }
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_http_error(self, mock_client_class):
         """Test HTTP error handling."""
         mock_client = Mock()
@@ -128,12 +128,12 @@ class TestPharoClient:
         )
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("GET", "/test")
 
         assert result == {"success": False, "error": "HTTP error 500: Server Error"}
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_json_decode_error(self, mock_client_class):
         """Test JSON decode error handling."""
         mock_client = Mock()
@@ -142,13 +142,13 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("GET", "/test")
 
         assert result["success"] is False
         assert "Invalid JSON response" in result["error"]
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_evaluate(self, mock_client_class):
         """Test evaluate method."""
         mock_client = Mock()
@@ -157,7 +157,7 @@ class TestPharoClient:
         mock_client.post.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.evaluate("1 + 1")
 
         assert result == {"success": True, "result": "42"}
@@ -165,7 +165,7 @@ class TestPharoClient:
             "http://localhost:8086/eval", json={"code": "1 + 1"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_get_class_source(self, mock_client_class):
         """Test get_class_source method."""
         mock_client = Mock()
@@ -174,7 +174,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.get_class_source("Object")
 
         assert result == {"success": True, "result": "class source"}
@@ -182,7 +182,7 @@ class TestPharoClient:
             "http://localhost:8086/get-class-source", params={"class_name": "Object"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_get_method_source(self, mock_client_class):
         """Test get_method_source method for instance method."""
         mock_client = Mock()
@@ -191,7 +191,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.get_method_source("Object", "hash")
 
         assert result == {"success": True, "result": "method source"}
@@ -204,7 +204,7 @@ class TestPharoClient:
             },
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_get_method_source_class_method(self, mock_client_class):
         """Test get_method_source method for class-side method."""
         mock_client = Mock()
@@ -216,7 +216,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.get_method_source("Array", "new:", is_class_method=True)
 
         assert result == {"success": True, "result": "class method source"}
@@ -229,7 +229,7 @@ class TestPharoClient:
             },
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_search_classes_like(self, mock_client_class):
         """Test search_classes_like method."""
         mock_client = Mock()
@@ -241,7 +241,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.search_classes_like("Str*")
 
         assert result == {"success": True, "result": ["String", "Symbol"]}
@@ -250,7 +250,7 @@ class TestPharoClient:
             params={"class_name_query": "Str*"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_search_methods_like(self, mock_client_class):
         """Test search_methods_like method."""
         mock_client = Mock()
@@ -259,7 +259,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.search_methods_like("a*:")
 
         assert result == {"success": True, "result": ["add:", "at:"]}
@@ -268,7 +268,7 @@ class TestPharoClient:
             params={"method_name_query": "a*:"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_search_implementors(self, mock_client_class):
         """Test search_implementors method."""
         mock_client = Mock()
@@ -280,7 +280,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.search_implementors("hash")
 
         assert result == {"success": True, "result": ["Object", "ProtoObject"]}
@@ -288,7 +288,7 @@ class TestPharoClient:
             "http://localhost:8086/search-implementors", params={"method_name": "hash"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_search_references(self, mock_client_class):
         """Test search_references method."""
         mock_client = Mock()
@@ -300,7 +300,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.search_references("hash")
 
         assert result == {"success": True, "result": ["Class1", "Class2"]}
@@ -308,7 +308,7 @@ class TestPharoClient:
             "http://localhost:8086/search-references", params={"program_symbol": "hash"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_export_package(self, mock_client_class):
         """Test export_package method."""
         mock_client = Mock()
@@ -317,7 +317,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.export_package("MyPackage")
 
         assert result == {"success": True, "result": "tonel content"}
@@ -326,7 +326,7 @@ class TestPharoClient:
             params={"package_name": "MyPackage", "path": "/tmp"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_import_package(self, mock_client_class):
         """Test import_package method."""
         mock_client = Mock()
@@ -335,7 +335,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.import_package("TestPackage", "/tmp/test")
 
         assert result == {"success": True, "result": "imported"}
@@ -344,7 +344,7 @@ class TestPharoClient:
             params={"package_name": "TestPackage", "path": "/tmp/test"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_run_package_test(self, mock_client_class):
         """Test run_package_test method."""
         mock_client = Mock()
@@ -353,7 +353,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.run_package_test("MyPackage")
 
         assert result == {"success": True, "result": "test results"}
@@ -362,7 +362,7 @@ class TestPharoClient:
             params={"package_name": "MyPackage"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_run_class_test(self, mock_client_class):
         """Test run_class_test method."""
         mock_client = Mock()
@@ -371,7 +371,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.run_class_test("MyClass")
 
         assert result == {"success": True, "result": "test results"}
@@ -379,7 +379,7 @@ class TestPharoClient:
             "http://localhost:8086/run-class-test", params={"class_name": "MyClass"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_list_packages(self, mock_client_class):
         """Test list_packages method."""
         mock_client = Mock()
@@ -391,7 +391,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.list_packages()
 
         assert result == {"success": True, "result": ["Package1", "Package2"]}
@@ -399,7 +399,7 @@ class TestPharoClient:
             "http://localhost:8086/list-packages", params=None
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_list_classes(self, mock_client_class):
         """Test list_classes method."""
         mock_client = Mock()
@@ -411,7 +411,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.list_classes("MyPackage")
 
         assert result == {"success": True, "result": ["Class1", "Class2"]}
@@ -419,7 +419,7 @@ class TestPharoClient:
             "http://localhost:8086/list-classes", params={"package_name": "MyPackage"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_get_class_comment(self, mock_client_class):
         """Test get_class_comment method."""
         mock_client = Mock()
@@ -428,7 +428,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.get_class_comment("Object")
 
         assert result == {"success": True, "result": "class comment"}
@@ -436,7 +436,7 @@ class TestPharoClient:
             "http://localhost:8086/get-class-comment", params={"class_name": "Object"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_list_extended_classes(self, mock_client_class):
         """Test list_extended_classes method."""
         mock_client = Mock()
@@ -448,7 +448,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.list_extended_classes("MyPackage")
 
         assert result == {"success": True, "result": ["ExtClass1", "ExtClass2"]}
@@ -457,7 +457,7 @@ class TestPharoClient:
             params={"package_name": "MyPackage"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_list_methods(self, mock_client_class):
         """Test list_methods method."""
         mock_client = Mock()
@@ -469,7 +469,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.list_methods("MyPackage")
 
         assert result == {"success": True, "result": ["method1", "method2"]}
@@ -477,7 +477,7 @@ class TestPharoClient:
             "http://localhost:8086/list-methods", params={"package_name": "MyPackage"}
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_search_traits_like(self, mock_client_class):
         """Test search_traits_like method."""
         mock_client = Mock()
@@ -489,7 +489,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.search_traits_like("T*")
 
         assert result == {"success": True, "result": ["Trait1", "Trait2"]}
@@ -498,7 +498,7 @@ class TestPharoClient:
             params={"trait_name_query": "T*"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_search_references_to_class(self, mock_client_class):
         """Test search_references_to_class method."""
         mock_client = Mock()
@@ -510,7 +510,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.search_references_to_class("Object")
 
         assert result == {"success": True, "result": ["Class1", "Class2"]}
@@ -519,7 +519,7 @@ class TestPharoClient:
             params={"class_name": "Object"},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_install_project(self, mock_client_class):
         """Test install_project method."""
         mock_client = Mock()
@@ -531,7 +531,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.install_project("TestProject", "http://github.com/test/repo")
 
         assert result == {"success": True, "result": "Project installed"}
@@ -543,7 +543,7 @@ class TestPharoClient:
             },
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_install_project_with_load_groups(self, mock_client_class):
         """Test install_project method with load_groups."""
         mock_client = Mock()
@@ -555,7 +555,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.install_project(
             "TestProject", "http://github.com/test/repo", "Core,Tests"
         )
@@ -570,18 +570,18 @@ class TestPharoClient:
             },
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_close(self, mock_client_class):
         """Test close method."""
         mock_client = Mock()
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         client.close()
 
         mock_client.close.assert_called_once()
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_read_screen(self, mock_client_class):
         """Test read_screen method with default parameters."""
         mock_client = Mock()
@@ -591,14 +591,14 @@ class TestPharoClient:
             "result": {
                 "structure": {"totalMorphs": 3, "morphs": []},
                 "summary": "World with 3 top-level morphs",
-                "screenshot": "/tmp/pharo-ui.png",
+                "screenshot": "/tmp/ui.png",
                 "target_type": "world",
             },
         }
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.read_screen()
 
         assert result["success"] is True
@@ -611,7 +611,7 @@ class TestPharoClient:
             },
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_read_screen_with_parameters(self, mock_client_class):
         """Test read_screen method with custom parameters."""
         mock_client = Mock()
@@ -623,7 +623,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.read_screen(target_type="spec", capture_screenshot=False)
 
         assert result["success"] is True
@@ -635,7 +635,7 @@ class TestPharoClient:
             },
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_read_screen_world(self, mock_client_class):
         """Test read_screen with target_type='world'."""
         mock_client = Mock()
@@ -655,14 +655,14 @@ class TestPharoClient:
                     ],
                 },
                 "summary": "World with 5 top-level morphs",
-                "screenshot": "/tmp/pharo-ui-world.png",
+                "screenshot": "/tmp/ui-world.png",
                 "target_type": "world",
             },
         }
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.read_screen(target_type="world", capture_screenshot=True)
 
         assert result["success"] is True
@@ -674,7 +674,7 @@ class TestPharoClient:
             params={"target_type": "world", "capture_screenshot": True},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_read_screen_spec(self, mock_client_class):
         """Test read_screen with target_type='spec' including nested presenter hierarchy."""
         mock_client = Mock()
@@ -734,7 +734,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.read_screen(target_type="spec", capture_screenshot=False)
 
         assert result["success"] is True
@@ -751,7 +751,7 @@ class TestPharoClient:
             params={"target_type": "spec", "capture_screenshot": False},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_read_screen_roassal(self, mock_client_class):
         """Test read_screen with target_type='roassal' including shape details."""
         mock_client = Mock()
@@ -804,7 +804,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.read_screen(target_type="roassal", capture_screenshot=True)
 
         assert result["success"] is True
@@ -815,7 +815,7 @@ class TestPharoClient:
             params={"target_type": "roassal", "capture_screenshot": True},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_read_screen_no_screenshot(self, mock_client_class):
         """Test read_screen without screenshot."""
         mock_client = Mock()
@@ -831,7 +831,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.read_screen(target_type="world", capture_screenshot=False)
 
         assert result["success"] is True
@@ -841,7 +841,7 @@ class TestPharoClient:
             params={"target_type": "world", "capture_screenshot": False},
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_get_settings(self, mock_client_class):
         """Test get_settings method."""
         mock_client = Mock()
@@ -853,7 +853,7 @@ class TestPharoClient:
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client.get_settings()
 
         assert result == {
@@ -864,7 +864,7 @@ class TestPharoClient:
             "http://localhost:8086/get-settings", params=None
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_apply_settings(self, mock_client_class):
         """Test apply_settings method."""
         mock_client = Mock()
@@ -876,7 +876,7 @@ class TestPharoClient:
         mock_client.post.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         settings = {"stackSize": 200, "customKey": "customValue"}
         result = client.apply_settings(settings)
 
@@ -890,22 +890,26 @@ class TestPharoClient:
 class TestGlobalClientFunctions:
     """Test global client functions."""
 
-    @patch("pharo_smalltalk_interop_mcp_server.core._pharo_client", None)
-    @patch("pharo_smalltalk_interop_mcp_server.core.PharoClient")
-    def test_get_pharo_client_creates_new_instance(self, mock_pharo_client_class):
-        """Test get_pharo_client creates new instance when none exists."""
+    @patch("smalltalk_interop_mcp_server.core._smalltalk_interop_client", None)
+    @patch("smalltalk_interop_mcp_server.core.SmalltalkInteropClient")
+    def test_get_smalltalk_interop_client_creates_new_instance(
+        self, mock_smalltalk_interop_client_class
+    ):
+        """Test get_smalltalk_interop_client creates new instance when none exists."""
         mock_client = Mock()
-        mock_pharo_client_class.return_value = mock_client
+        mock_smalltalk_interop_client_class.return_value = mock_client
 
-        result = get_pharo_client()
+        result = get_smalltalk_interop_client()
 
         assert result == mock_client
-        mock_pharo_client_class.assert_called_once()
+        mock_smalltalk_interop_client_class.assert_called_once()
 
-    @patch("pharo_smalltalk_interop_mcp_server.core._pharo_client")
-    def test_get_pharo_client_returns_existing_instance(self, mock_existing_client):
-        """Test get_pharo_client returns existing instance."""
-        result = get_pharo_client()
+    @patch("smalltalk_interop_mcp_server.core._smalltalk_interop_client")
+    def test_get_smalltalk_interop_client_returns_existing_instance(
+        self, mock_existing_client
+    ):
+        """Test get_smalltalk_interop_client returns existing instance."""
+        result = get_smalltalk_interop_client()
 
         assert result == mock_existing_client
 
@@ -913,7 +917,7 @@ class TestGlobalClientFunctions:
 class TestInteropFunctions:
     """Test interop wrapper functions."""
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_eval(self, mock_get_client):
         """Test interop_eval function."""
         mock_client = Mock()
@@ -925,7 +929,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "42"}
         mock_client.evaluate.assert_called_once_with("1 + 1")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_get_class_source(self, mock_get_client):
         """Test interop_get_class_source function."""
         mock_client = Mock()
@@ -940,7 +944,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "source"}
         mock_client.get_class_source.assert_called_once_with("Object")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_get_method_source(self, mock_get_client):
         """Test interop_get_method_source function."""
         mock_client = Mock()
@@ -957,7 +961,7 @@ class TestInteropFunctions:
             "Object", "hash", is_class_method=False
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_search_classes_like(self, mock_get_client):
         """Test interop_search_classes_like function."""
         mock_client = Mock()
@@ -972,7 +976,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["String"]}
         mock_client.search_classes_like.assert_called_once_with("Str*")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_search_methods_like(self, mock_get_client):
         """Test interop_search_methods_like function."""
         mock_client = Mock()
@@ -987,7 +991,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["add:"]}
         mock_client.search_methods_like.assert_called_once_with("a*:")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_search_implementors(self, mock_get_client):
         """Test interop_search_implementors function."""
         mock_client = Mock()
@@ -1002,7 +1006,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["Object"]}
         mock_client.search_implementors.assert_called_once_with("hash")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_search_references(self, mock_get_client):
         """Test interop_search_references function."""
         mock_client = Mock()
@@ -1017,7 +1021,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["Class1"]}
         mock_client.search_references.assert_called_once_with("hash")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_export_package(self, mock_get_client):
         """Test interop_export_package function."""
         mock_client = Mock()
@@ -1029,7 +1033,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "tonel"}
         mock_client.export_package.assert_called_once_with("MyPackage", "/tmp")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_import_package(self, mock_get_client):
         """Test interop_import_package function."""
         mock_client = Mock()
@@ -1044,7 +1048,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "imported"}
         mock_client.import_package.assert_called_once_with("TestPackage", "/tmp/test")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_run_package_test(self, mock_get_client):
         """Test interop_run_package_test function."""
         mock_client = Mock()
@@ -1059,7 +1063,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "test results"}
         mock_client.run_package_test.assert_called_once_with("MyPackage")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_run_class_test(self, mock_get_client):
         """Test interop_run_class_test function."""
         mock_client = Mock()
@@ -1074,7 +1078,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "test results"}
         mock_client.run_class_test.assert_called_once_with("MyClass")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_list_packages(self, mock_get_client):
         """Test interop_list_packages function."""
         mock_client = Mock()
@@ -1089,7 +1093,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["Package1"]}
         mock_client.list_packages.assert_called_once()
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_list_classes(self, mock_get_client):
         """Test interop_list_classes function."""
         mock_client = Mock()
@@ -1101,7 +1105,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["Class1"]}
         mock_client.list_classes.assert_called_once_with("MyPackage")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_get_class_comment(self, mock_get_client):
         """Test interop_get_class_comment function."""
         mock_client = Mock()
@@ -1116,7 +1120,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": "comment"}
         mock_client.get_class_comment.assert_called_once_with("Object")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_list_extended_classes(self, mock_get_client):
         """Test interop_list_extended_classes function."""
         mock_client = Mock()
@@ -1131,7 +1135,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["ExtClass1"]}
         mock_client.list_extended_classes.assert_called_once_with("MyPackage")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_list_methods(self, mock_get_client):
         """Test interop_list_methods function."""
         mock_client = Mock()
@@ -1143,7 +1147,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["method1"]}
         mock_client.list_methods.assert_called_once_with("MyPackage")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_search_traits_like(self, mock_get_client):
         """Test interop_search_traits_like function."""
         mock_client = Mock()
@@ -1158,7 +1162,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["Trait1"]}
         mock_client.search_traits_like.assert_called_once_with("T*")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_search_references_to_class(self, mock_get_client):
         """Test interop_search_references_to_class function."""
         mock_client = Mock()
@@ -1173,7 +1177,7 @@ class TestInteropFunctions:
         assert result == {"success": True, "result": ["Class1"]}
         mock_client.search_references_to_class.assert_called_once_with("Object")
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_install_project(self, mock_get_client):
         """Test interop_install_project function."""
         mock_client = Mock()
@@ -1190,7 +1194,7 @@ class TestInteropFunctions:
             "TestProject", "http://github.com/test/repo", None
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_install_project_with_load_groups(self, mock_get_client):
         """Test interop_install_project function with load_groups."""
         mock_client = Mock()
@@ -1209,7 +1213,7 @@ class TestInteropFunctions:
             "TestProject", "http://github.com/test/repo", "Core,Tests"
         )
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_read_screen(self, mock_get_client):
         """Test interop_read_screen function."""
         mock_client = Mock()
@@ -1218,7 +1222,7 @@ class TestInteropFunctions:
             "result": {
                 "structure": {"totalMorphs": 2, "morphs": []},
                 "summary": "World UI",
-                "screenshot": "/tmp/pharo-ui.png",
+                "screenshot": "/tmp/ui.png",
                 "target_type": "world",
             },
         }
@@ -1230,7 +1234,7 @@ class TestInteropFunctions:
         # interop_read_screen calls with positional args
         mock_client.read_screen.assert_called_once_with("world", True)
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_read_screen_with_parameters(self, mock_get_client):
         """Test interop_read_screen function with custom parameters."""
         mock_client = Mock()
@@ -1246,7 +1250,7 @@ class TestInteropFunctions:
         # interop_read_screen calls with positional args
         mock_client.read_screen.assert_called_once_with("spec", False)
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_get_settings(self, mock_get_client):
         """Test interop_get_settings function."""
         mock_client = Mock()
@@ -1264,7 +1268,7 @@ class TestInteropFunctions:
         }
         mock_client.get_settings.assert_called_once()
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.get_pharo_client")
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
     def test_interop_apply_settings(self, mock_get_client):
         """Test interop_apply_settings function."""
         mock_client = Mock()
@@ -1284,14 +1288,14 @@ class TestInteropFunctions:
 class TestEnhancedErrorHandling:
     """Test enhanced error handling functionality."""
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_with_enhanced_error_response(self, mock_client_class):
         """Test _make_request handling enhanced error response format (HTTP 200)."""
         mock_client = Mock()
         mock_response = Mock()
         mock_response.status_code = 200
 
-        # Enhanced error response format (returned as HTTP 200 by Pharo server)
+        # Enhanced error response format (returned as HTTP 200 by the Smalltalk Interop Server)
         enhanced_error = {
             "success": False,
             "error": {
@@ -1304,7 +1308,7 @@ class TestEnhancedErrorHandling:
         mock_client.post.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("POST", "/eval", {"code": "1 / 0"})
 
         expected = {
@@ -1317,20 +1321,20 @@ class TestEnhancedErrorHandling:
         }
         assert result == expected
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_with_simple_error_response(self, mock_client_class):
         """Test _make_request handling simple error response format (HTTP 200, backward compatibility)."""
         mock_client = Mock()
         mock_response = Mock()
         mock_response.status_code = 200
 
-        # Simple error response format (returned as HTTP 200 by Pharo server)
+        # Simple error response format (returned as HTTP 200 by the Smalltalk Interop Server)
         simple_error = {"success": False, "error": "Class not found: NonExistentClass"}
         mock_response.json.return_value = simple_error
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request(
             "GET", "/get-class-source", {"class_name": "NonExistentClass"}
         )
@@ -1338,7 +1342,7 @@ class TestEnhancedErrorHandling:
         expected = {"success": False, "error": "Class not found: NonExistentClass"}
         assert result == expected
 
-    @patch("pharo_smalltalk_interop_mcp_server.core.httpx.Client")
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_with_http_error(self, mock_client_class):
         """Test _make_request handling actual HTTP errors (e.g., server down)."""
         mock_client = Mock()
@@ -1351,7 +1355,7 @@ class TestEnhancedErrorHandling:
         )
         mock_client_class.return_value = mock_client
 
-        client = PharoClient()
+        client = SmalltalkInteropClient()
         result = client._make_request("POST", "/eval", {"code": "1 + 1"})
 
         expected = {"success": False, "error": "HTTP error 500: Internal Server Error"}

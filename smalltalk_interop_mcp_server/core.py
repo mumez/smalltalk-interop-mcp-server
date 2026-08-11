@@ -1,4 +1,4 @@
-"""Core functions for Pharo MCP server without FastMCP decorators."""
+"""Core functions for Smalltalk MCP server without FastMCP decorators."""
 
 import json
 import os
@@ -7,25 +7,25 @@ from typing import Any
 import httpx
 
 
-class PharoInteropError(Exception):
-    """Custom exception for Pharo interop errors."""
+class SmalltalkInteropError(Exception):
+    """Custom exception for Smalltalk interop errors."""
 
     pass
 
 
-class PharoClient:
-    """HTTP client for communicating with PharoSmalltalkInteropServer."""
+class SmalltalkInteropClient:
+    """HTTP client for communicating with the Smalltalk Interop Server."""
 
     def __init__(self, host: str = "localhost", port: int | None = None):
         if port is None:
-            port = int(os.getenv("PHARO_SIS_PORT", "8086"))
+            port = int(os.getenv("SIS_PORT", "8086"))
         self.base_url = f"http://{host}:{port}"
         self.client = httpx.Client(timeout=30.0)
 
     def _make_request(
         self, method: str, endpoint: str, data: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Make HTTP request to Pharo server."""
+        """Make HTTP request to the Smalltalk Interop Server."""
         url = f"{self.base_url}{endpoint}"
         try:
             if method.upper() == "GET":
@@ -166,7 +166,7 @@ class PharoClient:
         target_type: str = "world",
         capture_screenshot: bool = True,
     ) -> dict[str, Any]:
-        """Read and inspect Pharo UI structure with screenshot."""
+        """Read and inspect Smalltalk UI structure with screenshot."""
         data = {
             "target_type": target_type,
             "capture_screenshot": capture_screenshot,
@@ -188,20 +188,20 @@ class PharoClient:
 
 
 # Global client instance
-_pharo_client = None
+_smalltalk_interop_client = None
 
 
-def get_pharo_client() -> PharoClient:
-    """Get or create global Pharo client instance."""
-    global _pharo_client
-    if _pharo_client is None:
-        _pharo_client = PharoClient()
-    return _pharo_client
+def get_smalltalk_interop_client() -> SmalltalkInteropClient:
+    """Get or create global Smalltalk interop client instance."""
+    global _smalltalk_interop_client
+    if _smalltalk_interop_client is None:
+        _smalltalk_interop_client = SmalltalkInteropClient()
+    return _smalltalk_interop_client
 
 
 def interop_eval(code: str) -> dict[str, Any]:
     """
-    Evaluate a Pharo Smalltalk expression with PharoSmalltalkInteropServer.
+    Evaluate a Smalltalk expression via the Smalltalk Interop Server.
 
     Args:
         code: The Smalltalk code to evaluate
@@ -209,13 +209,13 @@ def interop_eval(code: str) -> dict[str, Any]:
     Returns:
         API response with success/error and result
     """
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.evaluate(code)
 
 
 def interop_get_class_source(class_name: str) -> dict[str, Any]:
     """Get source code of a class."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.get_class_source(class_name)
 
 
@@ -223,7 +223,7 @@ def interop_get_method_source(
     class_name: str, method_name: str, *, is_class_method: bool = False
 ) -> dict[str, Any]:
     """Get source code of a method."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.get_method_source(
         class_name, method_name, is_class_method=is_class_method
     )
@@ -231,91 +231,91 @@ def interop_get_method_source(
 
 def interop_search_classes_like(class_name_query: str) -> dict[str, Any]:
     """Find classes matching pattern."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.search_classes_like(class_name_query)
 
 
 def interop_search_methods_like(method_name_query: str) -> dict[str, Any]:
     """Find methods matching pattern."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.search_methods_like(method_name_query)
 
 
 def interop_search_implementors(selector: str) -> dict[str, Any]:
     """Get implementors of a selector."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.search_implementors(selector)
 
 
 def interop_search_references(program_symbol: str) -> dict[str, Any]:
     """Get references to a selector."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.search_references(program_symbol)
 
 
 def interop_export_package(package_name: str, path: str = "/tmp") -> dict[str, Any]:
     """Export package in Tonel format."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.export_package(package_name, path)
 
 
 def interop_import_package(package_name: str, path: str = "/tmp") -> dict[str, Any]:
     """Import package from specified path."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.import_package(package_name, path)
 
 
 def interop_run_package_test(package_name: str) -> dict[str, Any]:
     """Run tests for a package."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.run_package_test(package_name)
 
 
 def interop_run_class_test(class_name: str) -> dict[str, Any]:
     """Run tests for a class."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.run_class_test(class_name)
 
 
 def interop_list_packages() -> dict[str, Any]:
     """List all packages."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.list_packages()
 
 
 def interop_list_classes(package_name: str) -> dict[str, Any]:
     """List classes in a package."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.list_classes(package_name)
 
 
 def interop_get_class_comment(class_name: str) -> dict[str, Any]:
     """Get comment of a class."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.get_class_comment(class_name)
 
 
 def interop_list_extended_classes(package_name: str) -> dict[str, Any]:
     """List extended classes in a package."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.list_extended_classes(package_name)
 
 
 def interop_list_methods(package_name: str) -> dict[str, Any]:
     """List methods in a package."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.list_methods(package_name)
 
 
 def interop_search_traits_like(pattern: str) -> dict[str, Any]:
     """Find traits matching pattern."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.search_traits_like(pattern)
 
 
 def interop_search_references_to_class(class_name: str) -> dict[str, Any]:
     """Find references to a class."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.search_references_to_class(class_name)
 
 
@@ -323,7 +323,7 @@ def interop_install_project(
     project_name: str, repository_url: str, load_groups: str | None = None
 ) -> dict[str, Any]:
     """Install a project using Metacello."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.install_project(project_name, repository_url, load_groups)
 
 
@@ -331,18 +331,18 @@ def interop_read_screen(
     target_type: str = "world",
     capture_screenshot: bool = True,
 ) -> dict[str, Any]:
-    """Read and inspect Pharo UI structure with screenshot."""
-    client = get_pharo_client()
+    """Read and inspect Smalltalk UI structure with screenshot."""
+    client = get_smalltalk_interop_client()
     return client.read_screen(target_type, capture_screenshot)
 
 
 def interop_get_settings() -> dict[str, Any]:
     """Retrieve current server configuration."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.get_settings()
 
 
 def interop_apply_settings(settings: dict[str, Any]) -> dict[str, Any]:
     """Modify server configuration dynamically."""
-    client = get_pharo_client()
+    client = get_smalltalk_interop_client()
     return client.apply_settings(settings)

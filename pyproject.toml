@@ -1,7 +1,7 @@
 [project]
-name = "pharo-smalltalk-interop-mcp-server"
+name = "smalltalk-interop-mcp-server"
 version = "3.3.0"
-description = "a local MCP server to communicate local Pharo Smalltalk image"
+description = "a local MCP server to communicate with a local Pharo or Squeak Smalltalk image"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pharo-smalltalk-interop-mcp-server = "pharo_smalltalk_interop_mcp_server.server:main"
+smalltalk-interop-mcp-server = "smalltalk_interop_mcp_server.server:main"
 
 [dependency-groups]
 dev = [
@@ -28,7 +28,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pharo_smalltalk_interop_mcp_server*"]
+include = ["smalltalk_interop_mcp_server*"]
 exclude = ["claudedocs*", "tests*"]
 
 [tool.uv]

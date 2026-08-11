@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Python-based MCP (Model Context Protocol) server designed to communicate with local Pharo Smalltalk images. The server provides an interface for:
+This is a Python-based MCP (Model Context Protocol) server designed to communicate with local Smalltalk images (Pharo or Squeak). The server provides an interface for:
 
 - **Code Evaluation**: Execute Smalltalk expressions and return results
 - **Code Introspection**: Retrieve source code, comments, and metadata for classes and methods
@@ -12,7 +12,7 @@ This is a Python-based MCP (Model Context Protocol) server designed to communica
 - **Package Management**: Export and import packages in Tonel format
 - **Project Installation**: Install projects using Metacello
 - **Test Execution**: Run test suites at package or class level
-- **UI Debugging**: Capture screenshots and inspect UI structure for World morphs, Spec presenters, and Roassal visualizations
+- **UI Debugging**: Capture screenshots and inspect UI structure for World morphs, and (Pharo-only) Spec presenters and Roassal visualizations
 
 ## Development Setup
 
@@ -20,13 +20,15 @@ This project uses `uv` as the Python package manager. Prerequisites:
 
 - Python 3.10 or later
 - [uv](https://docs.astral.sh/uv/) package manager
-- Pharo with [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer) installed
+- A Smalltalk Interop Server installed in the target image:
+  - [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer) for Pharo
+  - [SqueakSmalltalkInteropServer](https://github.com/mumez/SqueakSmalltalkInteropServer) for Squeak
 
 ### Environment Variables
 
 You can configure the server using environment variables:
 
-- **`PHARO_SIS_PORT`**: Port number for PharoSmalltalkInteropServer (default: 8086)
+- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086)
 
 ### Common Commands
 
@@ -35,10 +37,10 @@ You can configure the server using environment variables:
 uv sync --dev
 
 # Run the MCP server
-uv run pharo-smalltalk-interop-mcp-server
+uv run smalltalk-interop-mcp-server
 
 # Run the MCP server with custom port
-PHARO_SIS_PORT=8081 uv run pharo-smalltalk-interop-mcp-server
+SIS_PORT=8081 uv run smalltalk-interop-mcp-server
 
 # Run tests
 uv run pytest
@@ -59,17 +61,17 @@ uv run pre-commit run --all-files
 
 ## Architecture Overview
 
-The codebase follows a layered architecture with clean separation of concerns:
+The codebase follows a layered architecture with clean separation of concerns. Since Pharo and Squeak both run the same Smalltalk Interop Server HTTP API, the MCP implementation does not need to distinguish between backends at runtime.
 
 ### Core Components
 
 1. **`core.py`** - HTTP client layer
 
-   - `PharoClient` class handles all HTTP communication with PharoSmalltalkInteropServer
+   - `SmalltalkInteropClient` class handles all HTTP communication with the Smalltalk Interop Server
    - Connects to `localhost:8086` by default
    - Comprehensive error handling for connection, HTTP, and JSON parsing errors
-   - Enhanced error handling supporting detailed error information from PharoSmalltalkInteropServer
-   - 22 core operations mapped to Pharo API endpoints
+   - Enhanced error handling supporting detailed error information from the Smalltalk Interop Server
+   - 22 core operations mapped to Smalltalk Interop Server API endpoints
 
 1. **`server.py`** - MCP server layer
 
@@ -90,14 +92,14 @@ The codebase follows a layered architecture with clean separation of concerns:
 
 ### Key Patterns
 
-- **Singleton HTTP Client**: Global `PharoClient` instance with connection reuse
+- **Singleton HTTP Client**: Global `SmalltalkInteropClient` instance with connection reuse
 - **Error Handling**: Structured JSON responses with success/error fields, automatic handling of both simple and detailed error formats
 - **Type Safety**: Full type hints throughout codebase
 - **Separation of Concerns**: Core logic separate from MCP decorators
 
 ## Enhanced Error Handling
 
-The MCP server supports enhanced error information from PharoSmalltalkInteropServer v2.0.0+, providing detailed debugging information while maintaining backward compatibility.
+The MCP server supports enhanced error information from the Smalltalk Interop Server (v2.0.0+), providing detailed debugging information while maintaining backward compatibility.
 
 ### Error Response Formats
 
@@ -129,7 +131,7 @@ The MCP server supports enhanced error information from PharoSmalltalkInteropSer
 
 ### Usage
 
-MCP tools return error responses directly from the Pharo server. Enhanced errors include:
+MCP tools return error responses directly from the Smalltalk Interop Server. Enhanced errors include:
 
 - **`description`**: Error message
 - **`stack_trace`**: Complete stack trace (string)
@@ -137,10 +139,10 @@ MCP tools return error responses directly from the Pharo server. Enhanced errors
 
 ### Compatibility
 
-- **PharoSmalltalkInteropServer v1.x**: Simple string error messages (backward compatible)
-- **PharoSmalltalkInteropServer v2.0.0+**: Enhanced error objects with stack traces and receiver information
+- **Smalltalk Interop Server v1.x**: Simple string error messages (backward compatible)
+- **Smalltalk Interop Server v2.0.0+**: Enhanced error objects with stack traces and receiver information
 
-The Pharo server uses Python-compatible naming conventions (`stack_trace`, `variables`). No code changes are required when upgrading the Pharo server.
+The Smalltalk Interop Server uses Python-compatible naming conventions (`stack_trace`, `variables`). No code changes are required when upgrading the server.
 
 ## Code Introspection
 
@@ -182,13 +184,13 @@ result = interop_get_method_source("Array class", "with:")
 
 ## UI Debugging
 
-The `read_screen` tool provides comprehensive UI inspection capabilities for debugging Pharo interfaces. It captures screenshots and extracts complete UI structure information.
+The `read_screen` tool provides comprehensive UI inspection capabilities for debugging Smalltalk interfaces. It captures screenshots and extracts complete UI structure information.
 
 ### Supported UI Types
 
-- **`world`**: World morphs (default) - Inspect the Pharo world and all visible morphs
-- **`spec`**: Spec windows - Inspect Spec presenters and their hierarchical structure
-- **`roassal`**: Roassal visualizations - Inspect Roassal canvas elements and shapes
+- **`world`**: World morphs (default) - Inspect the Morphic world and all visible morphs (Pharo and Squeak)
+- **`spec`**: Spec windows - Inspect Spec presenters and their hierarchical structure (Pharo only)
+- **`roassal`**: Roassal visualizations - Inspect Roassal canvas elements and shapes (Pharo only)
 
 ### Parameters
 
@@ -201,7 +203,7 @@ The `read_screen` tool provides comprehensive UI inspection capabilities for deb
 {
   "success": true,
   "result": {
-    "screenshot": "/tmp/pharo_screenshot_20250105_123456.png",
+    "screenshot": "/tmp/smalltalk_screenshot_20250105_123456.png",
     "target_type": "world",
     "structure": {
       "morphs": [...],
@@ -219,16 +221,16 @@ The `read_screen` tool provides comprehensive UI inspection capabilities for deb
 # Capture world morphs with screenshot
 result = read_screen(target_type="world", capture_screenshot=True)
 
-# Inspect Spec windows without screenshot
+# Inspect Spec windows without screenshot (Pharo only)
 result = read_screen(target_type="spec", capture_screenshot=False)
 
-# Inspect Roassal visualizations
+# Inspect Roassal visualizations (Pharo only)
 result = read_screen(target_type="roassal", capture_screenshot=True)
 ```
 
 ### Screenshot Storage
 
-Screenshots are saved to `/tmp/` with timestamped filenames: `pharo_screenshot_YYYYMMDD_HHMMSS.png`
+Screenshots are saved to `/tmp/` with timestamped filenames: `smalltalk_screenshot_YYYYMMDD_HHMMSS.png`
 
 ## Server Configuration
 
@@ -267,7 +269,7 @@ result = interop_apply_settings(settings)
 # Returns: {"success": True, "result": "Settings applied successfully"}
 ```
 
-**Request Format (sent to Pharo server):**
+**Request Format (sent to the Smalltalk Interop Server):**
 
 ```json
 {
@@ -302,16 +304,16 @@ The server is designed to be configured in Cursor's mcp.json:
 ```json
 {
   "mcpServers": {
-    "pharo-smalltalk-interop-mcp-server": {
+    "smalltalk-interop-mcp-server": {
       "command": "uv",
       "args": [
         "--directory",
-        "/path/to/pharo-smalltalk-interop-mcp-server",
+        "/path/to/smalltalk-interop-mcp-server",
         "run",
-        "pharo-smalltalk-interop-mcp-server"
+        "smalltalk-interop-mcp-server"
       ],
       "env": {
-        "PHARO_SIS_PORT": "8081"
+        "SIS_PORT": "8081"
       }
     }
   }
@@ -323,8 +325,8 @@ Note: The `env` section is optional and can be used to set environment variables
 ## Development Notes
 
 - Implementation follows MCP server patterns with FastMCP decorators
-- Communication with Pharo uses HTTP to PharoSmalltalkInteropServer (port 8086)
+- Communication with the Smalltalk image uses HTTP to the Smalltalk Interop Server (port 8086), which is backend-agnostic across Pharo and Squeak
 - All operations return structured JSON with success/error status
-- Enhanced error handling passes through detailed error information from Pharo server
-- Comprehensive test suite with mock-based testing to avoid requiring a live Pharo instance
+- Enhanced error handling passes through detailed error information from the Smalltalk Interop Server
+- Comprehensive test suite with mock-based testing to avoid requiring a live Pharo or Squeak instance
 - Tests cover all 22 endpoints and error scenarios
