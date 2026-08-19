@@ -54,7 +54,12 @@ def eval_code(
     Returns:
         dict: API response with success/error and result
         - Success: {"success": True, "result": any} - result contains the evaluation result
-        - Error: {"success": False, "error": str} - error contains error message
+        - Error: {"success": False, "error": str | dict} - error contains an error message,
+          or a detailed object with description/stack_trace/receiver for enhanced errors
+        - Unserializable result: {"success": True, "error": {"description": str,
+          "suggestion": str}} - the expression evaluated without error but its result
+          could not be serialized as JSON; error.suggestion advises how to adjust the
+          expression (e.g. append `printString`)
     """
     return interop_eval(code)
 
