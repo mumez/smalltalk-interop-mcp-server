@@ -571,6 +571,33 @@ class TestSmalltalkInteropClient:
         )
 
     @patch("smalltalk_interop_mcp_server.core.httpx.Client")
+    def test_install_project_with_force(self, mock_client_class):
+        """Test install_project method with force."""
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "success": True,
+            "result": "Project installed forcefully",
+        }
+        mock_client.get.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        client = SmalltalkInteropClient()
+        result = client.install_project(
+            "TestProject", "http://github.com/test/repo", force=True
+        )
+
+        assert result == {"success": True, "result": "Project installed forcefully"}
+        mock_client.get.assert_called_once_with(
+            "http://localhost:8086/install-project",
+            params={
+                "project_name": "TestProject",
+                "repository_url": "http://github.com/test/repo",
+                "force": "true",
+            },
+        )
+
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_close(self, mock_client_class):
         """Test close method."""
         mock_client = Mock()
@@ -1191,7 +1218,7 @@ class TestInteropFunctions:
 
         assert result == {"success": True, "result": "Project installed"}
         mock_client.install_project.assert_called_once_with(
-            "TestProject", "http://github.com/test/repo", None
+            "TestProject", "http://github.com/test/repo", None, False
         )
 
     @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
@@ -1210,7 +1237,26 @@ class TestInteropFunctions:
 
         assert result == {"success": True, "result": "Project installed with groups"}
         mock_client.install_project.assert_called_once_with(
-            "TestProject", "http://github.com/test/repo", "Core,Tests"
+            "TestProject", "http://github.com/test/repo", "Core,Tests", False
+        )
+
+    @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")
+    def test_interop_install_project_with_force(self, mock_get_client):
+        """Test interop_install_project function with force."""
+        mock_client = Mock()
+        mock_client.install_project.return_value = {
+            "success": True,
+            "result": "Project installed forcefully",
+        }
+        mock_get_client.return_value = mock_client
+
+        result = interop_install_project(
+            "TestProject", "http://github.com/test/repo", force=True
+        )
+
+        assert result == {"success": True, "result": "Project installed forcefully"}
+        mock_client.install_project.assert_called_once_with(
+            "TestProject", "http://github.com/test/repo", None, True
         )
 
     @patch("smalltalk_interop_mcp_server.core.get_smalltalk_interop_client")

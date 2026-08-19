@@ -555,6 +555,10 @@ def install_project(
     load_groups: Annotated[
         str | None, Field(description="Comma-separated list of groups to load")
     ] = None,
+    force: Annotated[
+        bool,
+        Field(description="Force load ignoring conflicts, upgrades, and image changes"),
+    ] = False,
 ) -> dict[str, Any]:
     """
     Install a project using Metacello.
@@ -563,13 +567,14 @@ def install_project(
         project_name: The name of the project to install
         repository_url: The repository URL for the project
         load_groups: Comma-separated list of groups to load (optional)
+        force: Force load ignoring conflicts, upgrades, and image changes (optional)
 
     Returns:
         dict: API response with success/error and result
         - Success: {"success": True, "result": str} - result contains installation success message
         - Error: {"success": False, "error": str} - error contains error message
     """
-    return interop_install_project(project_name, repository_url, load_groups)
+    return interop_install_project(project_name, repository_url, load_groups, force)
 
 
 @mcp.tool(

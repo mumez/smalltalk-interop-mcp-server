@@ -154,11 +154,14 @@ class SmalltalkInteropClient:
         project_name: str,
         repository_url: str,
         load_groups: str | None = None,
+        force: bool = False,
     ) -> dict[str, Any]:
         """Install a project using Metacello."""
         data = {"project_name": project_name, "repository_url": repository_url}
         if load_groups:
             data["load_groups"] = load_groups
+        if force:
+            data["force"] = "true"
         return self._make_request("GET", "/install-project", data)
 
     def read_screen(
@@ -320,11 +323,14 @@ def interop_search_references_to_class(class_name: str) -> dict[str, Any]:
 
 
 def interop_install_project(
-    project_name: str, repository_url: str, load_groups: str | None = None
+    project_name: str,
+    repository_url: str,
+    load_groups: str | None = None,
+    force: bool = False,
 ) -> dict[str, Any]:
     """Install a project using Metacello."""
     client = get_smalltalk_interop_client()
-    return client.install_project(project_name, repository_url, load_groups)
+    return client.install_project(project_name, repository_url, load_groups, force)
 
 
 def interop_read_screen(
