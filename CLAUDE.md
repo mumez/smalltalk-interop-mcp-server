@@ -129,6 +129,18 @@ The MCP server supports enhanced error information from the Smalltalk Interop Se
 }
 ```
 
+**Unserializable Eval Result** (`eval` only): if the expression evaluates without error but the result cannot be serialized as JSON, the response keeps `success: true` and reports the issue via `error`:
+
+```json
+{
+  "success": true,
+  "error": {
+    "description": "Result is a Object instance which cannot be serialized as JSON",
+    "suggestion": "Modify the expression to return a serializable value. For a human-readable result, append `printString` (e.g., `(<your expression>) printString`)"
+  }
+}
+```
+
 ### Usage
 
 MCP tools return error responses directly from the Smalltalk Interop Server. Enhanced errors include:
@@ -136,6 +148,7 @@ MCP tools return error responses directly from the Smalltalk Interop Server. Enh
 - **`description`**: Error message
 - **`stack_trace`**: Complete stack trace (string)
 - **`receiver`**: Object that received the failing message with class, self representation, and instance variables
+- **`suggestion`**: Suggested action to resolve the issue (e.g., how to adjust an `eval` expression to return a serializable value)
 
 ### Compatibility
 
