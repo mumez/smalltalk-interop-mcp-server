@@ -18,28 +18,30 @@ class SmalltalkInteropError(Exception):
     pass
 
 
-def _port_from_env() -> int:
-    """Read SIS_PORT, falling back to the default port if it is unset or invalid.
+def _env_port_or_default() -> int:
+    """Return SIS_PORT as a port number, or the default port if unset or invalid.
 
     MCP clients may pass unexpanded placeholders (e.g. `${env:SIS_PORT}` or
     `${SIS_PORT}` when the variable is undefined), so invalid values must
-    not break the server.
+    not break the server. An unset or empty value is treated as "not
+    configured" and falls back silently; any other invalid value logs a
+    warning.
     """
     value = os.getenv("SIS_PORT")
     if value is None or not value.strip():
         return DEFAULT_PORT
     try:
         port = int(value.strip())
+        if 0 < port < 65536:
+            return port
     except ValueError:
-        port = 0
-    if not 0 < port < 65536:
-        logger.warning(
-            "Invalid SIS_PORT value %r; falling back to default port %d",
-            value,
-            DEFAULT_PORT,
-        )
-        return DEFAULT_PORT
-    return port
+        pass
+    logger.warning(
+        "Invalid SIS_PORT value %r; falling back to default port %d",
+        value,
+        DEFAULT_PORT,
+    )
+    return DEFAULT_PORT
 
 
 class SmalltalkInteropClient:
@@ -47,7 +49,7 @@ class SmalltalkInteropClient:
 
     def __init__(self, host: str = "localhost", port: int | None = None):
         if port is None:
-            port = _port_from_env()
+            port = _env_port_or_default()
         self.base_url = f"http://{host}:{port}"
         self.client = httpx.Client(timeout=30.0)
 
