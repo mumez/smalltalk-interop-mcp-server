@@ -1,6 +1,6 @@
 [project]
 name = "smalltalk-interop-mcp-server"
-version = "3.4.0"
+version = "4.1.0"
 description = "a local MCP server to communicate with a local Pharo or Squeak Smalltalk image"
 readme = "README.md"
 requires-python = ">=3.10"
