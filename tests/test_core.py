@@ -4,6 +4,7 @@ import json
 from unittest.mock import Mock, patch
 
 import httpx
+import pytest
 
 from smalltalk_interop_mcp_server.core import (
     SmalltalkInteropClient,
@@ -64,6 +65,21 @@ class TestSmalltalkInteropClient:
         """Test default port is used when no environment variable is set."""
         client = SmalltalkInteropClient()
         assert client.base_url == "http://localhost:8086"
+
+    @pytest.mark.parametrize(
+        "invalid_port", ["${env:SIS_PORT}", "", "abc", "0", "65536", "-1"]
+    )
+    def test_init_invalid_env_port_falls_back_to_default(self, invalid_port):
+        """Test default port is used when SIS_PORT is not a valid port number."""
+        with patch.dict("os.environ", {"SIS_PORT": invalid_port}):
+            client = SmalltalkInteropClient()
+        assert client.base_url == "http://localhost:8086"
+
+    @patch.dict("os.environ", {"SIS_PORT": " 8081 "})
+    def test_init_env_port_with_whitespace(self):
+        """Test SIS_PORT surrounded by whitespace is accepted."""
+        client = SmalltalkInteropClient()
+        assert client.base_url == "http://localhost:8081"
 
     @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_get_success(self, mock_client_class):

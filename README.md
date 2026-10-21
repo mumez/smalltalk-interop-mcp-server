@@ -69,7 +69,7 @@ uv run smalltalk-interop-mcp-server
 
 You can configure the server using environment variables:
 
-- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086)
+- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086). If the value cannot be interpreted as a port number, the default port is used.
 
 Examples:
 

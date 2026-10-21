@@ -1,10 +1,15 @@
 """Core functions for Smalltalk MCP server without FastMCP decorators."""
 
 import json
+import logging
 import os
 from typing import Any
 
 import httpx
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_PORT = 8086
 
 
 class SmalltalkInteropError(Exception):
@@ -13,12 +18,36 @@ class SmalltalkInteropError(Exception):
     pass
 
 
+def _port_from_env() -> int:
+    """Read SIS_PORT, falling back to the default port if it is unset or invalid.
+
+    MCP clients may pass unexpanded placeholders (e.g. `${env:SIS_PORT}` or
+    `${SIS_PORT}` when the variable is undefined), so invalid values must
+    not break the server.
+    """
+    value = os.getenv("SIS_PORT")
+    if value is None or not value.strip():
+        return DEFAULT_PORT
+    try:
+        port = int(value.strip())
+    except ValueError:
+        port = 0
+    if not 0 < port < 65536:
+        logger.warning(
+            "Invalid SIS_PORT value %r; falling back to default port %d",
+            value,
+            DEFAULT_PORT,
+        )
+        return DEFAULT_PORT
+    return port
+
+
 class SmalltalkInteropClient:
     """HTTP client for communicating with the Smalltalk Interop Server."""
 
     def __init__(self, host: str = "localhost", port: int | None = None):
         if port is None:
-            port = int(os.getenv("SIS_PORT", "8086"))
+            port = _port_from_env()
         self.base_url = f"http://{host}:{port}"
         self.client = httpx.Client(timeout=30.0)
 
