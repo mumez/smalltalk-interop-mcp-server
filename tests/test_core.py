@@ -4,8 +4,10 @@ import json
 from unittest.mock import Mock, patch
 
 import httpx
+import pytest
 
 from smalltalk_interop_mcp_server.core import (
+    DEFAULT_PORT,
     SmalltalkInteropClient,
     get_smalltalk_interop_client,
     interop_apply_settings,
@@ -64,6 +66,41 @@ class TestSmalltalkInteropClient:
         """Test default port is used when no environment variable is set."""
         client = SmalltalkInteropClient()
         assert client.base_url == "http://localhost:8086"
+
+    @pytest.mark.parametrize("empty_port", ["", "   "])
+    def test_init_empty_env_port_falls_back_silently(self, empty_port, caplog):
+        """Test empty SIS_PORT is treated as unset: default port, no warning."""
+        with patch.dict("os.environ", {"SIS_PORT": empty_port}):
+            client = SmalltalkInteropClient()
+        assert client.base_url == f"http://localhost:{DEFAULT_PORT}"
+        assert "Invalid SIS_PORT" not in caplog.text
+
+    @pytest.mark.parametrize(
+        "invalid_port", ["${env:SIS_PORT}", "${SIS_PORT}", "abc", "0", "65536", "-1"]
+    )
+    def test_init_invalid_env_port_falls_back_to_default(self, invalid_port, caplog):
+        """Test default port is used, with a warning, for an invalid SIS_PORT."""
+        with patch.dict("os.environ", {"SIS_PORT": invalid_port}):
+            client = SmalltalkInteropClient()
+        assert client.base_url == f"http://localhost:{DEFAULT_PORT}"
+        assert any(
+            record.levelname == "WARNING" and invalid_port in record.getMessage()
+            for record in caplog.records
+        )
+
+    @pytest.mark.parametrize("boundary_port", ["1", "65535"])
+    def test_init_env_port_valid_boundaries(self, boundary_port, caplog):
+        """Test the inclusive bounds of the valid port range are accepted."""
+        with patch.dict("os.environ", {"SIS_PORT": boundary_port}):
+            client = SmalltalkInteropClient()
+        assert client.base_url == f"http://localhost:{boundary_port}"
+        assert "Invalid SIS_PORT" not in caplog.text
+
+    @patch.dict("os.environ", {"SIS_PORT": " 8081 "})
+    def test_init_env_port_with_whitespace(self):
+        """Test SIS_PORT surrounded by whitespace is accepted."""
+        client = SmalltalkInteropClient()
+        assert client.base_url == "http://localhost:8081"
 
     @patch("smalltalk_interop_mcp_server.core.httpx.Client")
     def test_make_request_get_success(self, mock_client_class):

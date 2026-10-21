@@ -952,41 +952,6 @@ wheels = [
 ]
 
 [[package]]
-name = "smalltalk-interop-mcp-server"
-version = "3.3.0"
-source = { editable = "." }
-dependencies = [
-    { name = "fastmcp" },
-    { name = "httpx" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "mdformat" },
-    { name = "mdformat-frontmatter" },
-    { name = "mdformat-gfm" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastmcp", specifier = ">=3.4.2" },
-    { name = "httpx", specifier = ">=0.28.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mdformat", specifier = ">=0.7.22" },
-    { name = "mdformat-frontmatter", specifier = ">=2.0.8" },
-    { name = "mdformat-gfm", specifier = ">=0.4.1" },
-    { name = "pre-commit", specifier = ">=4.3.0" },
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "ruff", specifier = ">=0.14.1" },
-]
-
-[[package]]
 name = "platformdirs"
 version = "4.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1654,6 +1619,41 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/32/8a/ed6747b1cc723c81f526d4c12c1b1d43d07190e1e8258dbf934392fc850e/secretstorage-3.4.1.tar.gz", hash = "sha256:a799acf5be9fb93db609ebaa4ab6e8f1f3ed5ae640e0fa732bfea59e9c3b50e8", size = 19871, upload-time = "2025-11-11T11:30:23.798Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b0/6d/24ebb101484f1911a6be6695b76ce43219caa110ebbe07d8c3a5f3106cca/secretstorage-3.4.1-py3-none-any.whl", hash = "sha256:c55d57b4da3de568d8c3af89dad244ab24c35ca1da8625fc1b550edf005ebc41", size = 15301, upload-time = "2025-11-11T11:30:22.618Z" },
+]
+
+[[package]]
+name = "smalltalk-interop-mcp-server"
+version = "3.4.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastmcp" },
+    { name = "httpx" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mdformat" },
+    { name = "mdformat-frontmatter" },
+    { name = "mdformat-gfm" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastmcp", specifier = ">=3.4.2" },
+    { name = "httpx", specifier = ">=0.28.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mdformat", specifier = ">=0.7.22" },
+    { name = "mdformat-frontmatter", specifier = ">=2.0.8" },
+    { name = "mdformat-gfm", specifier = ">=0.4.1" },
+    { name = "pre-commit", specifier = ">=4.3.0" },
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "ruff", specifier = ">=0.14.1" },
 ]
 
 [[package]]
