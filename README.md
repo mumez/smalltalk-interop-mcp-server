@@ -13,6 +13,7 @@ It supports:
 - Test Execution: Run test suites at package or class level
 - UI Debugging: Capture screenshots and inspect UI structure for World morphs, and (Pharo only) Spec presenters and Roassal visualizations
 - Server Configuration: Retrieve and modify server settings dynamically
+- Connection Management: Recreate the SIS HTTP connection at runtime with an optional host/port override
 
 ## Prerequisites
 
@@ -69,7 +70,7 @@ uv run smalltalk-interop-mcp-server
 
 You can configure the server using environment variables:
 
-- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086). An empty value is treated as unset. If the value cannot be interpreted as a port number, a warning is logged and the default port is used.
+- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086). An empty value is treated as unset. If the value cannot be interpreted as a port number, a warning is logged and the default port is used. Use the `reset_connection` tool to override host and port at runtime without restarting the MCP server.
 
 Examples:
 
@@ -146,7 +147,7 @@ claude mcp add -s user smalltalk-interop -- uv --directory /path/to/smalltalk-in
 
 ### MCP Tools Available
 
-This server provides 22 MCP tools that map to the Smalltalk Interop Server API, shared by both [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer/blob/main/spec/openapi.json) and [SqueakSmalltalkInteropServer](https://github.com/mumez/SqueakSmalltalkInteropServer):
+This server provides 23 MCP tools. 22 map to the Smalltalk Interop Server API, shared by both [PharoSmalltalkInteropServer](https://github.com/mumez/PharoSmalltalkInteropServer/blob/main/spec/openapi.json) and [SqueakSmalltalkInteropServer](https://github.com/mumez/SqueakSmalltalkInteropServer). `reset_connection` is a local MCP tool that switches the HTTP client to another SIS host or port:
 
 #### Code Evaluation
 
@@ -193,6 +194,10 @@ This server provides 22 MCP tools that map to the Smalltalk Interop Server API, 
 
 - **`get_settings`**: Retrieve current server configuration
 - **`apply_settings`**: Modify server configuration dynamically
+
+#### Connection Management
+
+- **`reset_connection`**: Recreate the SIS HTTP connection, optionally overriding host and port
 
 ### read_screen Tool
 
@@ -377,6 +382,44 @@ apply_settings(settings={"stackSize": 200, "customKey": "customValue"})
 
 **Note:** The server accepts arbitrary key-value pairs beyond documented settings, allowing custom configuration options.
 
+### reset_connection Tool
+
+The `reset_connection` tool recreates the MCP server's HTTP client so you can point at a different SIS instance without restarting the process.
+
+**Parameters:**
+
+- `host` (string, optional, default: `localhost`): SIS host. Empty or whitespace values use localhost.
+- `port` (integer, optional, default: `SIS_PORT`, or 8086 if unset/invalid): SIS port. An explicit invalid port is rejected and the current connection is left unchanged.
+
+**Returns:** The resolved host, port, and base URL
+
+**Usage Examples:**
+
+```python
+# Switch to another SIS instance
+reset_connection(host="127.0.0.1", port=8081)
+# Returns: {"success": True, "result": {"host": "127.0.0.1", "port": 8081, "base_url": "http://127.0.0.1:8081"}}
+
+# Override only the port (host stays localhost)
+reset_connection(port=9090)
+
+# Restore localhost and SIS_PORT (or 8086)
+reset_connection()
+```
+
+**Response Format:**
+
+```json
+{
+  "success": true,
+  "result": {
+    "host": "127.0.0.1",
+    "port": 8081,
+    "base_url": "http://127.0.0.1:8081"
+  }
+}
+```
+
 ## Development
 
 ### Running Tests
@@ -429,14 +472,14 @@ smalltalk-interop-mcp-server/
 The test suite uses mock-based testing to ensure:
 
 - **No external dependencies**: Tests run without requiring a live Pharo or Squeak instance
-- **Comprehensive coverage**: All 22 endpoints and error scenarios are tested
+- **Comprehensive coverage**: All 22 SIS endpoints, `reset_connection`, and error scenarios are tested
 - **Fast execution**: Tests complete in under 1 second
 - **Reliable results**: Tests are deterministic and don't depend on external state
 
 Test coverage includes:
 
 - HTTP client functionality (`SmalltalkInteropClient` class)
-- All 22 Smalltalk interop operations
+- All 22 Smalltalk interop operations plus `reset_connection`
 - Error handling (connection errors, HTTP errors, JSON parsing errors)
 - MCP server initialization and tool registration
 - Integration between core functions and MCP tools

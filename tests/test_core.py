@@ -24,6 +24,7 @@ from smalltalk_interop_mcp_server.core import (
     interop_list_methods,
     interop_list_packages,
     interop_read_screen,
+    interop_reset_connection,
     interop_run_class_test,
     interop_run_package_test,
     interop_search_classes_like,
@@ -976,6 +977,150 @@ class TestGlobalClientFunctions:
         result = get_smalltalk_interop_client()
 
         assert result == mock_existing_client
+
+
+class TestResetConnection:
+    """Test runtime SIS connection override."""
+
+    @pytest.fixture(autouse=True)
+    def isolate_global_client(self):
+        """Keep reset_connection tests from leaking the singleton client."""
+        import smalltalk_interop_mcp_server.core as core
+
+        original = core._smalltalk_interop_client
+        core._smalltalk_interop_client = None
+        yield
+        current = core._smalltalk_interop_client
+        if current is not None and current is not original:
+            current.close()
+        core._smalltalk_interop_client = original
+
+    @patch.dict("os.environ", {}, clear=True)
+    def test_defaults_to_localhost_and_default_port(self):
+        """Omitted host/port use localhost and the default SIS port."""
+        result = interop_reset_connection()
+
+        assert result == {
+            "success": True,
+            "result": {
+                "host": "localhost",
+                "port": DEFAULT_PORT,
+                "base_url": f"http://localhost:{DEFAULT_PORT}",
+            },
+        }
+        assert get_smalltalk_interop_client().base_url == (
+            f"http://localhost:{DEFAULT_PORT}"
+        )
+
+    @patch.dict("os.environ", {"SIS_PORT": "8081"})
+    def test_defaults_to_localhost_and_sis_port(self):
+        """Omitted port uses SIS_PORT when it is set."""
+        result = interop_reset_connection()
+
+        assert result["success"] is True
+        assert result["result"]["host"] == "localhost"
+        assert result["result"]["port"] == 8081
+        assert result["result"]["base_url"] == "http://localhost:8081"
+        assert get_smalltalk_interop_client().base_url == "http://localhost:8081"
+
+    def test_overrides_host_and_port(self):
+        """Explicit host and port replace the current connection."""
+        result = interop_reset_connection(host="example.com", port=9999)
+
+        assert result == {
+            "success": True,
+            "result": {
+                "host": "example.com",
+                "port": 9999,
+                "base_url": "http://example.com:9999",
+            },
+        }
+        assert get_smalltalk_interop_client().base_url == "http://example.com:9999"
+
+    @patch.dict("os.environ", {"SIS_PORT": "8081"})
+    def test_overrides_host_only(self):
+        """Omitted port keeps SIS_PORT when only host is provided."""
+        result = interop_reset_connection(host="127.0.0.1")
+
+        assert result["success"] is True
+        assert result["result"]["host"] == "127.0.0.1"
+        assert result["result"]["port"] == 8081
+        assert get_smalltalk_interop_client().base_url == "http://127.0.0.1:8081"
+
+    def test_overrides_port_only(self):
+        """Omitted host keeps localhost when only port is provided."""
+        result = interop_reset_connection(port=9090)
+
+        assert result["success"] is True
+        assert result["result"]["host"] == "localhost"
+        assert result["result"]["port"] == 9090
+        assert get_smalltalk_interop_client().base_url == "http://localhost:9090"
+
+    @pytest.mark.parametrize("empty_host", ["", "   "])
+    def test_empty_host_uses_localhost(self, empty_host):
+        """Empty or whitespace host is treated as localhost."""
+        result = interop_reset_connection(host=empty_host, port=9090)
+
+        assert result["success"] is True
+        assert result["result"]["host"] == "localhost"
+        assert get_smalltalk_interop_client().base_url == "http://localhost:9090"
+
+    def test_closes_existing_client(self):
+        """Resetting the connection closes the previous HTTP client."""
+        import smalltalk_interop_mcp_server.core as core
+
+        old_client = Mock()
+        core._smalltalk_interop_client = old_client
+
+        result = interop_reset_connection(host="example.com", port=9999)
+
+        assert result["success"] is True
+        old_client.close.assert_called_once()
+        assert get_smalltalk_interop_client() is not old_client
+        assert get_smalltalk_interop_client().base_url == "http://example.com:9999"
+
+    @pytest.mark.parametrize("invalid_port", [0, -1, 65536, "abc"])
+    def test_invalid_port_keeps_existing_client(self, invalid_port):
+        """Invalid explicit port is rejected and does not replace the client."""
+        import smalltalk_interop_mcp_server.core as core
+
+        old_client = Mock()
+        core._smalltalk_interop_client = old_client
+
+        result = interop_reset_connection(port=invalid_port)
+
+        assert result["success"] is False
+        assert "Invalid port" in result["error"]
+        old_client.close.assert_not_called()
+        assert core._smalltalk_interop_client is old_client
+
+    @patch.dict("os.environ", {"SIS_PORT": "8081"})
+    def test_restore_defaults_after_override(self):
+        """Calling reset_connection without args restores localhost and SIS_PORT."""
+        interop_reset_connection(host="example.com", port=9999)
+        result = interop_reset_connection()
+
+        assert result["success"] is True
+        assert result["result"]["host"] == "localhost"
+        assert result["result"]["port"] == 8081
+        assert get_smalltalk_interop_client().base_url == "http://localhost:8081"
+
+    @patch("smalltalk_interop_mcp_server.core.httpx.Client")
+    def test_subsequent_requests_use_new_base_url(self, mock_client_class):
+        """Later SIS calls go to the overridden host and port."""
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "result": "42"}
+        mock_client.post.return_value = mock_response
+        mock_client_class.return_value = mock_client
+
+        interop_reset_connection(host="example.com", port=9999)
+        result = interop_eval("1 + 1")
+
+        assert result == {"success": True, "result": "42"}
+        mock_client.post.assert_called_once_with(
+            "http://example.com:9999/eval", json={"code": "1 + 1"}
+        )
 
 
 class TestInteropFunctions:

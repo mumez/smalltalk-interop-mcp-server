@@ -84,3 +84,33 @@ class TestMCPToolsIntegration:
 
         assert callable(main)
         # Don't actually call main() as it would start the server
+
+    def test_reset_connection_tool_registered(self):
+        """Test that reset_connection is registered as an MCP tool."""
+        import asyncio
+
+        from smalltalk_interop_mcp_server.server import mcp, reset_connection
+
+        assert callable(reset_connection)
+        tool = asyncio.run(mcp.get_tool("reset_connection"))
+        assert tool is not None
+        assert tool.name == "reset_connection"
+
+    @patch("smalltalk_interop_mcp_server.server.interop_reset_connection")
+    def test_reset_connection_tool_delegates(self, mock_interop_reset_connection):
+        """Test reset_connection MCP tool delegates to the core function."""
+        mock_interop_reset_connection.return_value = {
+            "success": True,
+            "result": {
+                "host": "example.com",
+                "port": 9999,
+                "base_url": "http://example.com:9999",
+            },
+        }
+
+        from smalltalk_interop_mcp_server.server import reset_connection
+
+        result = reset_connection(None, host="example.com", port=9999)
+
+        assert result == mock_interop_reset_connection.return_value
+        mock_interop_reset_connection.assert_called_once_with("example.com", 9999)
