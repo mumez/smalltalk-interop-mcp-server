@@ -62,6 +62,12 @@ class TestSmalltalkInteropClient:
         client = SmalltalkInteropClient(port=9999)
         assert client.base_url == "http://localhost:9999"
 
+    @pytest.mark.parametrize("invalid_port", [0, -1, 65536])
+    def test_init_invalid_explicit_port_raises(self, invalid_port):
+        """Explicit constructor ports use the same 1–65535 bound as reset."""
+        with pytest.raises(ValueError, match="Invalid port"):
+            SmalltalkInteropClient(port=invalid_port)
+
     @patch.dict("os.environ", {}, clear=True)
     def test_init_default_port_when_no_env(self):
         """Test default port is used when no environment variable is set."""

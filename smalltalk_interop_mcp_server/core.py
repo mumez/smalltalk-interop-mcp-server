@@ -19,6 +19,10 @@ class SmalltalkInteropError(Exception):
     pass
 
 
+def _is_valid_port(port: int) -> bool:
+    return 0 < port < 65536
+
+
 def _env_port_or_default() -> int:
     """Return SIS_PORT as a port number, or the default port if unset or invalid.
 
@@ -33,7 +37,7 @@ def _env_port_or_default() -> int:
         return DEFAULT_PORT
     try:
         port = int(value.strip())
-        if 0 < port < 65536:
+        if _is_valid_port(port):
             return port
     except ValueError:
         pass
@@ -52,17 +56,19 @@ def _resolve_host(host: str | None) -> str:
     return str(host).strip()
 
 
-def _resolve_explicit_port(port: int | str) -> int:
-    """Parse and validate an explicit SIS port.
+def _resolve_port(port: int | str | None) -> int:
+    """Resolve an SIS port: None uses SIS_PORT/default, else parse and validate.
 
     Raises:
-        ValueError: If the value cannot be interpreted as a port in 1–65535.
+        ValueError: If an explicit port cannot be interpreted as 1–65535.
     """
+    if port is None:
+        return _env_port_or_default()
     try:
         parsed = int(port)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid port: {port!r}") from exc
-    if not 0 < parsed < 65536:
+    if not _is_valid_port(parsed):
         raise ValueError(f"Invalid port: {port!r}")
     return parsed
 
@@ -71,8 +77,7 @@ class SmalltalkInteropClient:
     """HTTP client for communicating with the Smalltalk Interop Server."""
 
     def __init__(self, host: str = DEFAULT_HOST, port: int | None = None):
-        if port is None:
-            port = _env_port_or_default()
+        port = _resolve_port(port)
         self.base_url = f"http://{host}:{port}"
         self.client = httpx.Client(timeout=30.0)
 
@@ -269,15 +274,13 @@ def interop_reset_connection(
     global _smalltalk_interop_client
 
     resolved_host = _resolve_host(host)
-    if port is None:
-        resolved_port = _env_port_or_default()
-    else:
-        try:
-            resolved_port = _resolve_explicit_port(port)
-        except ValueError as exc:
-            return {"success": False, "error": str(exc)}
+    try:
+        resolved_port = _resolve_port(port)
+    except ValueError as exc:
+        return {"success": False, "error": str(exc)}
 
     new_client = SmalltalkInteropClient(host=resolved_host, port=resolved_port)
+    # Serial dispatch assumed: a concurrent in-flight request may still hold the previous client.
     if _smalltalk_interop_client is not None:
         _smalltalk_interop_client.close()
     _smalltalk_interop_client = new_client
