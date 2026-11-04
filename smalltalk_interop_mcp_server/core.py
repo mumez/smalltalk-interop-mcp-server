@@ -9,6 +9,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8086
 
 
@@ -16,6 +17,10 @@ class SmalltalkInteropError(Exception):
     """Custom exception for Smalltalk interop errors."""
 
     pass
+
+
+def _is_valid_port(port: int) -> bool:
+    return 0 < port < 65536
 
 
 def _env_port_or_default() -> int:
@@ -32,7 +37,7 @@ def _env_port_or_default() -> int:
         return DEFAULT_PORT
     try:
         port = int(value.strip())
-        if 0 < port < 65536:
+        if _is_valid_port(port):
             return port
     except ValueError:
         pass
@@ -44,12 +49,35 @@ def _env_port_or_default() -> int:
     return DEFAULT_PORT
 
 
+def _resolve_host(host: str | None) -> str:
+    """Return a usable SIS host, defaulting empty or omitted values to localhost."""
+    if host is None or not str(host).strip():
+        return DEFAULT_HOST
+    return str(host).strip()
+
+
+def _resolve_port(port: int | str | None) -> int:
+    """Resolve an SIS port: None uses SIS_PORT/default, else parse and validate.
+
+    Raises:
+        ValueError: If an explicit port cannot be interpreted as 1–65535.
+    """
+    if port is None:
+        return _env_port_or_default()
+    try:
+        parsed = int(port)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid port: {port!r}") from exc
+    if not _is_valid_port(parsed):
+        raise ValueError(f"Invalid port: {port!r}")
+    return parsed
+
+
 class SmalltalkInteropClient:
     """HTTP client for communicating with the Smalltalk Interop Server."""
 
-    def __init__(self, host: str = "localhost", port: int | None = None):
-        if port is None:
-            port = _env_port_or_default()
+    def __init__(self, host: str = DEFAULT_HOST, port: int | None = None):
+        port = _resolve_port(port)
         self.base_url = f"http://{host}:{port}"
         self.client = httpx.Client(timeout=30.0)
 
@@ -231,6 +259,39 @@ def get_smalltalk_interop_client() -> SmalltalkInteropClient:
     if _smalltalk_interop_client is None:
         _smalltalk_interop_client = SmalltalkInteropClient()
     return _smalltalk_interop_client
+
+
+def interop_reset_connection(
+    host: str | None = None, port: int | str | None = None
+) -> dict[str, Any]:
+    """
+    Recreate the global SIS client, optionally overriding host and port.
+
+    Omitted or empty ``host`` defaults to localhost. Omitted ``port`` defaults
+    to ``SIS_PORT`` (or 8086 when that variable is unset or invalid). An
+    explicit invalid port is rejected and the current client is left unchanged.
+    """
+    global _smalltalk_interop_client
+
+    resolved_host = _resolve_host(host)
+    try:
+        resolved_port = _resolve_port(port)
+    except ValueError as exc:
+        return {"success": False, "error": str(exc)}
+
+    new_client = SmalltalkInteropClient(host=resolved_host, port=resolved_port)
+    # Serial dispatch assumed: a concurrent in-flight request may still hold the previous client.
+    if _smalltalk_interop_client is not None:
+        _smalltalk_interop_client.close()
+    _smalltalk_interop_client = new_client
+    return {
+        "success": True,
+        "result": {
+            "host": resolved_host,
+            "port": resolved_port,
+            "base_url": new_client.base_url,
+        },
+    }
 
 
 def interop_eval(code: str) -> dict[str, Any]:

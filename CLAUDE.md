@@ -13,6 +13,7 @@ This is a Python-based MCP (Model Context Protocol) server designed to communica
 - **Project Installation**: Install projects using Metacello
 - **Test Execution**: Run test suites at package or class level
 - **UI Debugging**: Capture screenshots and inspect UI structure for World morphs, and (Pharo-only) Spec presenters and Roassal visualizations
+- **Connection Management**: Recreate the SIS HTTP connection at runtime with an optional host/port override
 
 ## Development Setup
 
@@ -28,7 +29,7 @@ This project uses `uv` as the Python package manager. Prerequisites:
 
 You can configure the server using environment variables:
 
-- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086). An empty value is treated as unset. If the value cannot be interpreted as a port number (non-numeric or outside 1–65535), a warning is logged and the default port is used.
+- **`SIS_PORT`**: Port number for the Smalltalk Interop Server (default: 8086). An empty value is treated as unset. If the value cannot be interpreted as a port number (non-numeric or outside 1–65535), a warning is logged and the default port is used. The `reset_connection` tool can override host and port at runtime without restarting the MCP server.
 
 ### Common Commands
 
@@ -72,12 +73,13 @@ The codebase follows a layered architecture with clean separation of concerns. S
    - Comprehensive error handling for connection, HTTP, and JSON parsing errors
    - Enhanced error handling supporting detailed error information from the Smalltalk Interop Server
    - 22 core operations mapped to Smalltalk Interop Server API endpoints
+   - `reset_connection` recreates the client-side HTTP connection (not a SIS API endpoint)
 
 1. **`server.py`** - MCP server layer
 
    - Built on FastMCP framework
    - Decorates core functions with MCP tool registration
-   - Exposes 22 MCP tools covering code evaluation, introspection, search, packages, project installation, testing, UI debugging, and server configuration
+   - Exposes 23 MCP tools covering code evaluation, introspection, search, packages, project installation, testing, UI debugging, server configuration, and connection management
 
 ### Tool Categories
 
@@ -89,10 +91,11 @@ The codebase follows a layered architecture with clean separation of concerns. S
 - **Test Execution**: `run_package_test`, `run_class_test`
 - **UI Debugging**: `read_screen` - Capture screenshots and extract UI structure
 - **Server Configuration**: `get_settings`, `apply_settings` - Retrieve and modify server configuration
+- **Connection Management**: `reset_connection` - Recreate the SIS HTTP connection with optional host/port override
 
 ### Key Patterns
 
-- **Singleton HTTP Client**: Global `SmalltalkInteropClient` instance with connection reuse
+- **Singleton HTTP Client**: Global `SmalltalkInteropClient` instance with connection reuse; `reset_connection` closes and replaces it
 - **Error Handling**: Structured JSON responses with success/error fields, automatic handling of both simple and detailed error formats
 - **Type Safety**: Full type hints throughout codebase
 - **Separation of Concerns**: Core logic separate from MCP decorators
@@ -310,6 +313,41 @@ result = interop_apply_settings(settings)
 
 **Note:** The server accepts arbitrary key-value pairs beyond documented settings, allowing custom configuration options.
 
+## Connection Management
+
+The `reset_connection` tool recreates the MCP server's HTTP client so you can point at a different SIS instance without restarting the process.
+
+### reset_connection
+
+**Parameters:**
+
+- **`host`**: SIS host (optional, default: `localhost`). Empty or whitespace values use the default.
+- **`port`**: SIS port (optional, default: `SIS_PORT`, or 8086 if that variable is unset or invalid). An explicit invalid port is rejected and the current connection is left unchanged.
+
+**Usage Example:**
+
+```python
+# Switch to another SIS instance
+result = interop_reset_connection(host="127.0.0.1", port=8081)
+# Returns: {"success": True, "result": {"host": "127.0.0.1", "port": 8081, "base_url": "http://127.0.0.1:8081"}}
+
+# Restore localhost and SIS_PORT (or 8086)
+result = interop_reset_connection()
+```
+
+**Response Format:**
+
+```json
+{
+  "success": true,
+  "result": {
+    "host": "127.0.0.1",
+    "port": 8081,
+    "base_url": "http://127.0.0.1:8081"
+  }
+}
+```
+
 ## MCP Integration
 
 The server is designed to be configured in Cursor's mcp.json:
@@ -342,4 +380,4 @@ Note: The `env` section is optional and can be used to set environment variables
 - All operations return structured JSON with success/error status
 - Enhanced error handling passes through detailed error information from the Smalltalk Interop Server
 - Comprehensive test suite with mock-based testing to avoid requiring a live Pharo or Squeak instance
-- Tests cover all 22 endpoints and error scenarios
+- Tests cover all 22 SIS endpoints, `reset_connection`, and error scenarios

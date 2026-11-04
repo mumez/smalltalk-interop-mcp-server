@@ -20,6 +20,7 @@ from .core import (
     interop_list_methods,
     interop_list_packages,
     interop_read_screen,
+    interop_reset_connection,
     interop_run_class_test,
     interop_run_package_test,
     interop_search_classes_like,
@@ -661,6 +662,49 @@ def apply_settings(
         - Error: {"success": False, "error": str} - error contains error message
     """
     return interop_apply_settings(settings)
+
+
+@mcp.tool(
+    "reset_connection",
+    annotations={
+        "title": "Reset Connection",
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+def reset_connection(
+    _: Context,
+    host: Annotated[
+        str | None,
+        Field(
+            description="SIS host to connect to (default: localhost). Empty values use localhost."
+        ),
+    ] = None,
+    port: Annotated[
+        int | None,
+        Field(
+            description="SIS port to connect to (default: SIS_PORT, or 8086 if unset/invalid)"
+        ),
+    ] = None,
+) -> dict[str, Any]:
+    """
+    Recreate the HTTP connection to the Smalltalk Interop Server.
+
+    Use this to switch the MCP server to another SIS host or port at runtime
+    without restarting the process. Omitted arguments fall back to localhost
+    and SIS_PORT (or 8086).
+
+    Args:
+        host: SIS host (default: localhost)
+        port: SIS port (default: SIS_PORT or 8086)
+
+    Returns:
+        dict: API response with success/error and result
+        - Success: {"success": True, "result": {"host": str, "port": int, "base_url": str}}
+        - Error: {"success": False, "error": str} - error contains error message
+    """
+    return interop_reset_connection(host, port)
 
 
 def main():
