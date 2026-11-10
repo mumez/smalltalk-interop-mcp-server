@@ -36,6 +36,11 @@ jobs:
 
     - name: Run tests
       run: uv run pytest -v
+      env:
+        # Fail camelCase MCP field reads instead of warning. FastMCP 4's
+        # compatibility bridge is temporary.
+        # https://gofastmcp.com/docs/getting-started/upgrading/from-fastmcp-3
+        FASTMCP_MCP_CAMELCASE_COMPAT: "false"
 
     - name: Test MCP server can start
       run: |

@@ -3,6 +3,7 @@
 from typing import Annotated, Any
 
 from fastmcp import Context, FastMCP
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from .core import (
@@ -31,16 +32,18 @@ from .core import (
     interop_search_traits_like,
 )
 
+# MCP SDK v2 (FastMCP 4) uses snake_case ToolAnnotations fields.
+# https://gofastmcp.com/docs/getting-started/upgrading/from-fastmcp-3
 mcp = FastMCP("smalltalk-interop-mcp-server")
 
 
 @mcp.tool(
     "eval",
-    annotations={
-        "title": "Evaluate Smalltalk",
-        "destructiveHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Evaluate Smalltalk",
+        destructive_hint=True,
+        open_world_hint=False,
+    ),
 )
 def eval_code(
     _: Context,
@@ -67,11 +70,11 @@ def eval_code(
 
 @mcp.tool(
     "get_class_source",
-    annotations={
-        "title": "Get Class Source",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Get Class Source",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def get_class_source(
     _: Context,
@@ -95,11 +98,11 @@ def get_class_source(
 
 @mcp.tool(
     "get_method_source",
-    annotations={
-        "title": "Get Method Source",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Get Method Source",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def get_method_source(
     _: Context,
@@ -136,11 +139,11 @@ def get_method_source(
 
 @mcp.tool(
     "get_class_comment",
-    annotations={
-        "title": "Get Class Comment",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Get Class Comment",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def get_class_comment(
     _: Context,
@@ -164,11 +167,11 @@ def get_class_comment(
 
 @mcp.tool(
     "search_classes_like",
-    annotations={
-        "title": "Search Classes Like",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Search Classes Like",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def search_classes_like(
     _: Context,
@@ -192,11 +195,11 @@ def search_classes_like(
 
 @mcp.tool(
     "search_methods_like",
-    annotations={
-        "title": "Search Methods Like",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Search Methods Like",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def search_methods_like(
     _: Context,
@@ -220,11 +223,11 @@ def search_methods_like(
 
 @mcp.tool(
     "search_implementors",
-    annotations={
-        "title": "Search Implementors",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Search Implementors",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def search_implementors(
     _: Context,
@@ -249,11 +252,11 @@ def search_implementors(
 
 @mcp.tool(
     "search_references",
-    annotations={
-        "title": "Search References",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Search References",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def search_references(
     _: Context,
@@ -278,11 +281,11 @@ def search_references(
 
 @mcp.tool(
     "list_packages",
-    annotations={
-        "title": "List Packages",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="List Packages",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def list_packages(_: Context) -> dict[str, Any]:
     """
@@ -298,7 +301,9 @@ def list_packages(_: Context) -> dict[str, Any]:
 
 @mcp.tool(
     "list_classes",
-    annotations={"title": "List Classes", "readOnlyHint": True, "openWorldHint": False},
+    annotations=ToolAnnotations(
+        title="List Classes", read_only_hint=True, open_world_hint=False
+    ),
 )
 def list_classes(
     _: Context,
@@ -320,11 +325,11 @@ def list_classes(
 
 @mcp.tool(
     "export_package",
-    annotations={
-        "title": "Export Package",
-        "idempotentHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Export Package",
+        idempotent_hint=True,
+        open_world_hint=False,
+    ),
 )
 def export_package(
     _: Context,
@@ -352,11 +357,11 @@ def export_package(
 
 @mcp.tool(
     "import_package",
-    annotations={
-        "title": "Import Package",
-        "destructiveHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Import Package",
+        destructive_hint=True,
+        open_world_hint=False,
+    ),
 )
 def import_package(
     _: Context,
@@ -384,11 +389,11 @@ def import_package(
 
 @mcp.tool(
     "run_package_test",
-    annotations={
-        "title": "Run Package Test",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Run Package Test",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def run_package_test(
     _: Context,
@@ -412,11 +417,11 @@ def run_package_test(
 
 @mcp.tool(
     "run_class_test",
-    annotations={
-        "title": "Run Class Test",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Run Class Test",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def run_class_test(
     _: Context,
@@ -438,11 +443,11 @@ def run_class_test(
 
 @mcp.tool(
     "list_extended_classes",
-    annotations={
-        "title": "List Extended Classes",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="List Extended Classes",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def list_extended_classes(
     _: Context,
@@ -464,7 +469,9 @@ def list_extended_classes(
 
 @mcp.tool(
     "list_methods",
-    annotations={"title": "List Methods", "readOnlyHint": True, "openWorldHint": False},
+    annotations=ToolAnnotations(
+        title="List Methods", read_only_hint=True, open_world_hint=False
+    ),
 )
 def list_methods(
     _: Context,
@@ -487,11 +494,11 @@ def list_methods(
 
 @mcp.tool(
     "search_traits_like",
-    annotations={
-        "title": "Search Traits Like",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Search Traits Like",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def search_traits_like(
     _: Context,
@@ -515,11 +522,11 @@ def search_traits_like(
 
 @mcp.tool(
     "search_references_to_class",
-    annotations={
-        "title": "Search References to Class",
-        "readOnlyHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Search References to Class",
+        read_only_hint=True,
+        open_world_hint=False,
+    ),
 )
 def search_references_to_class(
     _: Context,
@@ -544,11 +551,11 @@ def search_references_to_class(
 
 @mcp.tool(
     "install_project",
-    annotations={
-        "title": "Install Project",
-        "destructiveHint": True,
-        "openWorldHint": True,
-    },
+    annotations=ToolAnnotations(
+        title="Install Project",
+        destructive_hint=True,
+        open_world_hint=True,
+    ),
 )
 def install_project(
     _: Context,
@@ -585,7 +592,9 @@ def install_project(
 
 @mcp.tool(
     "read_screen",
-    annotations={"title": "Read Screen", "readOnlyHint": True, "openWorldHint": False},
+    annotations=ToolAnnotations(
+        title="Read Screen", read_only_hint=True, open_world_hint=False
+    ),
 )
 def read_screen(
     _: Context,
@@ -621,7 +630,9 @@ def read_screen(
 
 @mcp.tool(
     "get_settings",
-    annotations={"title": "Get Settings", "readOnlyHint": True, "openWorldHint": False},
+    annotations=ToolAnnotations(
+        title="Get Settings", read_only_hint=True, open_world_hint=False
+    ),
 )
 def get_settings(_: Context) -> dict[str, Any]:
     """
@@ -637,12 +648,12 @@ def get_settings(_: Context) -> dict[str, Any]:
 
 @mcp.tool(
     "apply_settings",
-    annotations={
-        "title": "Apply Settings",
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Apply Settings",
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
+    ),
 )
 def apply_settings(
     _: Context,
@@ -666,12 +677,12 @@ def apply_settings(
 
 @mcp.tool(
     "reset_connection",
-    annotations={
-        "title": "Reset Connection",
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    },
+    annotations=ToolAnnotations(
+        title="Reset Connection",
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
+    ),
 )
 def reset_connection(
     _: Context,
