@@ -5,7 +5,7 @@ description = "a local MCP server to communicate with a local Pharo or Squeak Sm
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastmcp>=3.4.2",
+    "fastmcp>=4.1.4",
     "httpx>=0.28.1"
 ]
 
